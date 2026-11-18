@@ -6,7 +6,7 @@ import { useChat } from '@/context/ChatContext';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function UserProfileSection() {
-  const { setIsSettingsOpen } = useChat();
+  const { setIsSettingsOpen, profileSettings } = useChat();
 
   return (
     <div className="border-t border-slate-200 dark:border-blue-950/60 p-3 flex items-center justify-between gap-2 bg-slate-50/50 dark:bg-[#020409]">
@@ -18,11 +18,13 @@ export default function UserProfileSection() {
         <div className="min-w-0">
           <div className="flex items-center gap-1">
             <span className="text-xs font-semibold text-slate-800 dark:text-blue-100 truncate">
-              Digital Citizen
+              {profileSettings?.displayName || 'Digital Citizen'}
             </span>
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400 shrink-0 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-blue-300/50 truncate">Protected Session</p>
+          <p className="text-[11px] text-slate-400 dark:text-blue-300/50 truncate">
+            {profileSettings?.primaryBank ? `${profileSettings.primaryBank} User` : 'Protected Session'}
+          </p>
         </div>
       </div>
 

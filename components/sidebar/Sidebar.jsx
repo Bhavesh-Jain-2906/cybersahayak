@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { ShieldAlert, Plus, Search, X, PanelLeftClose } from 'lucide-react';
+import {
+  ShieldAlert,
+  Plus,
+  Search,
+  X,
+  PanelLeftClose,
+  MessageSquare,
+  LayoutDashboard,
+  BookOpen,
+  HelpCircle,
+  ShieldCheck,
+} from 'lucide-react';
 import { useChat } from '@/context/ChatContext';
 import ChatHistoryList from './ChatHistoryList';
 import UserProfileSection from './UserProfileSection';
@@ -15,6 +26,10 @@ export default function Sidebar() {
     setIsMobileSidebarOpen,
     isDesktopSidebarOpen,
     toggleDesktopSidebar,
+    activeView,
+    setActiveView,
+    quizStats,
+    activeConversation,
   } = useChat();
 
   // Keyboard shortcut listener for Ctrl+K / Cmd+K to start New Chat
@@ -95,17 +110,120 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* New Chat Action */}
-        <div className="p-3">
+        {/* Navigation Sections */}
+        <nav aria-label="Main Navigation" className="px-3 pt-3 pb-2 space-y-1">
+          <button
+            onClick={() => {
+              setActiveView('chat');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${
+              activeView === 'chat'
+                ? 'bg-blue-600/15 text-blue-600 dark:text-blue-300 border border-blue-500/30 shadow-cool-blue-xs font-semibold'
+                : 'text-slate-600 dark:text-blue-200/70 hover:bg-slate-200/60 dark:hover:bg-blue-950/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
+            <span className="truncate">AI Assistant</span>
+            {activeConversation && (
+              <span className="ml-auto w-2 h-2 rounded-full bg-blue-500 shrink-0 animate-pulse" />
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveView('dashboard');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${
+              activeView === 'dashboard'
+                ? 'bg-blue-600/15 text-blue-600 dark:text-blue-300 border border-blue-500/30 shadow-cool-blue-xs font-semibold'
+                : 'text-slate-600 dark:text-blue-200/70 hover:bg-slate-200/60 dark:hover:bg-blue-950/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />
+            <span className="truncate">Protection Hub</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveView('awareness');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${
+              activeView === 'awareness'
+                ? 'bg-blue-600/15 text-blue-600 dark:text-blue-300 border border-blue-500/30 shadow-cool-blue-xs font-semibold'
+                : 'text-slate-600 dark:text-blue-200/70 hover:bg-slate-200/60 dark:hover:bg-blue-950/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <BookOpen className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+            <span className="truncate">Cyber Awareness</span>
+            <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+              10
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveView('quiz');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${
+              activeView === 'quiz'
+                ? 'bg-blue-600/15 text-blue-600 dark:text-blue-300 border border-blue-500/30 shadow-cool-blue-xs font-semibold'
+                : 'text-slate-600 dark:text-blue-200/70 hover:bg-slate-200/60 dark:hover:bg-blue-950/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <HelpCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
+            <span className="truncate">Safety Quiz</span>
+            {quizStats?.completed && (
+              <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                {quizStats.score}/{quizStats.total}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveView('resources');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${
+              activeView === 'resources'
+                ? 'bg-blue-600/15 text-blue-600 dark:text-blue-300 border border-blue-500/30 shadow-cool-blue-xs font-semibold'
+                : 'text-slate-600 dark:text-blue-200/70 hover:bg-slate-200/60 dark:hover:bg-blue-950/40 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0" />
+            <span className="truncate">Help & Resources</span>
+          </button>
+        </nav>
+
+        {/* Conversations Header with New Chat */}
+        <div className="px-3 pt-2 pb-1.5">
+          <div className="border-t border-slate-200 dark:border-blue-950/60 pt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-400 dark:text-blue-300/50 uppercase tracking-wider px-1">
+            <span>Conversations</span>
+            <button
+              onClick={createNewChat}
+              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-blue-950/50 text-blue-500 dark:text-blue-400 transition-colors"
+              title="New Chat (Ctrl+K)"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* New Chat Action Button */}
+        <div className="px-3 pb-2">
           <button
             onClick={createNewChat}
-            className="group flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs md:text-sm shadow-cool-blue hover:shadow-cool-blue-lg transition-all duration-200 active:scale-[0.99]"
+            className="group flex items-center justify-between w-full px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-xs shadow-cool-blue hover:shadow-cool-blue-lg transition-all duration-200 active:scale-[0.99]"
           >
             <div className="flex items-center gap-2">
-              <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
-              <span>New Chat</span>
+              <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" />
+              <span>New Conversation</span>
             </div>
-            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-white/20 rounded text-white/90 shadow-sm">
+            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-mono bg-white/20 rounded text-white/90 shadow-sm">
               Ctrl+K
             </kbd>
           </button>

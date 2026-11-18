@@ -20,6 +20,20 @@ export function ChatProvider({ children }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeView, setActiveView] = useState('chat'); // 'chat' | 'dashboard' | 'awareness' | 'quiz' | 'resources'
+  const [profileSettings, setProfileSettings] = useState({
+    displayName: 'Digital Citizen',
+    primaryBank: 'State Bank of India',
+    emergencyContact: '',
+    conversationTone: 'calm_practical',
+  });
+  const [quizStats, setQuizStats] = useState({
+    completed: false,
+    score: 0,
+    total: 8,
+    lastCompletedDate: null,
+  });
+  const [recentlyViewedArticles, setRecentlyViewedArticles] = useState(['upi-fraud', 'phishing']);
   const [mounted, setMounted] = useState(false);
 
   // Initialize from storage on client mount
@@ -33,7 +47,62 @@ export function ChatProvider({ children }) {
     } else if (savedConvs.length > 0) {
       setActiveId(savedConvs[0].id);
     }
+
+    try {
+      const savedProfile = localStorage.getItem('cybersahayak_profile');
+      if (savedProfile) {
+        setProfileSettings(JSON.parse(savedProfile));
+      }
+      const savedQuiz = localStorage.getItem('cybersahayak_quiz');
+      if (savedQuiz) {
+        setQuizStats(JSON.parse(savedQuiz));
+      }
+      const savedArticles = localStorage.getItem('cybersahayak_viewed_articles');
+      if (savedArticles) {
+        setRecentlyViewedArticles(JSON.parse(savedArticles));
+      }
+    } catch {
+      // Ignore localStorage access exceptions
+    }
+
     setMounted(true);
+  }, []);
+
+  // Save profile updates
+  const updateProfileSettings = useCallback((newSettings) => {
+    setProfileSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem('cybersahayak_profile', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
+  // Save quiz result
+  const recordQuizResult = useCallback((score, total) => {
+    const newStats = {
+      completed: true,
+      score,
+      total,
+      lastCompletedDate: new Date().toISOString(),
+    };
+    setQuizStats(newStats);
+    try {
+      localStorage.setItem('cybersahayak_quiz', JSON.stringify(newStats));
+    } catch {}
+  }, []);
+
+  // Track viewed article
+  const recordArticleView = useCallback((articleId) => {
+    setRecentlyViewedArticles((prev) => {
+      const filtered = prev.filter((id) => id !== articleId);
+      const updated = [articleId, ...filtered].slice(0, 5);
+      try {
+        localStorage.setItem('cybersahayak_viewed_articles', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
   }, []);
 
   // Sync conversations to localStorage whenever they change
@@ -69,6 +138,7 @@ export function ChatProvider({ children }) {
   // Create a brand new chat
   const createNewChat = useCallback(() => {
     setActiveId(null);
+    setActiveView('chat');
     setError(null);
     setIsMobileSidebarOpen(false);
   }, []);
@@ -257,7 +327,19 @@ export function ChatProvider({ children }) {
     const promptToRetry = error.retryPrompt;
     setError(null);
     sendMessage(promptToRetry);
-  }, [error]);
+  }, [error, sendMessage]);
+
+  // Start chat with a specific prompt (from dashboard or awareness articles)
+  const startChatWithPrompt = useCallback(
+    (prompt) => {
+      setActiveView('chat');
+      setActiveId(null);
+      setError(null);
+      setIsMobileSidebarOpen(false);
+      sendMessage(prompt);
+    },
+    [sendMessage]
+  );
 
   return (
     <ChatContext.Provider
@@ -278,6 +360,15 @@ export function ChatProvider({ children }) {
         toggleDesktopSidebar,
         isSettingsOpen,
         setIsSettingsOpen,
+        activeView,
+        setActiveView,
+        profileSettings,
+        updateProfileSettings,
+        quizStats,
+        recordQuizResult,
+        recentlyViewedArticles,
+        recordArticleView,
+        startChatWithPrompt,
         createNewChat,
         selectConversation,
         renameConversation,
