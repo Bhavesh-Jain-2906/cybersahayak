@@ -124,7 +124,7 @@ export function ChatProvider({ children }) {
     setError(null);
   }, []);
 
-  // Send a user message
+  // Send a user message to the live LangGraph AI backend
   const sendMessage = async (content) => {
     if (!content || !content.trim() || isLoading) return;
 
@@ -139,6 +139,7 @@ export function ChatProvider({ children }) {
     };
 
     let targetConvId = activeId;
+    let currentHistory = [];
 
     // If currently no active conversation, create one
     if (!targetConvId || !conversations.some((c) => c.id === targetConvId)) {
@@ -150,11 +151,17 @@ export function ChatProvider({ children }) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         messages: [userMessage],
+        clarificationsAsked: [],
       };
 
       setConversations((prev) => [newConv, ...prev]);
       setActiveId(targetConvId);
+      currentHistory = [];
     } else {
+      // Find current conversation messages for history isolation
+      const existingConv = conversations.find((c) => c.id === targetConvId);
+      currentHistory = existingConv ? existingConv.messages : [];
+
       // Append user message to existing conversation
       setConversations((prev) =>
         prev.map((c) =>
@@ -172,41 +179,76 @@ export function ChatProvider({ children }) {
     // Set loading indicator
     setIsLoading(true);
 
-    // Simulate response delay for interaction testing
-    setTimeout(() => {
-      try {
-        // Will throw if query includes 'test error' or '/error' to verify error state
-        const responseContent = getSampleResponse(trimmed);
+    try {
+      const activeConv = conversations.find((c) => c.id === targetConvId);
+      const priorClarifications = activeConv?.clarificationsAsked || [];
 
-        const assistantMessage = {
-          id: 'msg-' + Date.now() + '-assistant',
-          role: 'assistant',
-          content: responseContent,
-          createdAt: new Date().toISOString(),
-        };
+      // Convert history for the API call (isolate to only valid user/assistant turns)
+      const formattedHistory = currentHistory
+        .filter((m) => m && (m.role === 'user' || m.role === 'assistant'))
+        .map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
 
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === targetConvId
-              ? {
-                  ...c,
-                  updatedAt: new Date().toISOString(),
-                  messages: [...c.messages, assistantMessage],
-                }
-              : c
-          )
-        );
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: trimmed,
+          conversationId: targetConvId,
+          history: formattedHistory,
+          clarificationsAsked: priorClarifications,
+        }),
+      });
 
-        setIsLoading(false);
-      } catch (err) {
-        setIsLoading(false);
-        setError({
-          message: err.message || 'An error occurred while generating guidance.',
-          retryPrompt: trimmed,
-          targetConvId: targetConvId,
-        });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `Server responded with status ${res.status}`);
       }
-    }, 600);
+
+      const assistantMessage = {
+        id: 'msg-' + Date.now() + '-assistant',
+        role: 'assistant',
+        content: data.response,
+        createdAt: new Date().toISOString(),
+        ragUsed: Boolean(data.ragUsed),
+        retrievedSources: data.retrievedSources || [],
+        intent: data.intent,
+        metadata: data.metadata,
+      };
+
+      // Append assistant message and record any new clarifications
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === targetConvId) {
+            const nextClarifications = Array.isArray(data.clarificationsAsked)
+              ? Array.from(new Set([...(c.clarificationsAsked || []), ...data.clarificationsAsked]))
+              : c.clarificationsAsked || [];
+
+            return {
+              ...c,
+              updatedAt: new Date().toISOString(),
+              messages: [...c.messages, assistantMessage],
+              clarificationsAsked: nextClarifications,
+            };
+          }
+          return c;
+        })
+      );
+
+      setIsLoading(false);
+    } catch (err) {
+      setIsLoading(false);
+      setError({
+        message: err.message || 'Failed to connect to CyberSahayak AI assistant.',
+        retryPrompt: trimmed,
+        targetConvId: targetConvId,
+      });
+    }
   };
 
   // Retry the message that previously failed
