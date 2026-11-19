@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { User, Copy, Check } from 'lucide-react';
 import { formatMessageTime } from '@/lib/dateUtils';
 
-export default function UserMessage({ message }) {
+function UserMessage({ message }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -60,3 +60,5 @@ export default function UserMessage({ message }) {
     </div>
   );
 }
+
+export default memo(UserMessage);

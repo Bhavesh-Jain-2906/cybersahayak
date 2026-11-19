@@ -239,7 +239,7 @@ export default function DashboardView() {
               </div>
               <h3 className="text-lg font-bold">Have you encountered active fraud or financial theft?</h3>
               <p className="text-xs text-blue-200/70 max-w-xl">
-                Always report within the 2-3 hour "Golden Hour" window to ensure beneficiary bank freezes can be executed.
+                Always report within the 2-3 hour &quot;Golden Hour&quot; window to ensure beneficiary bank freezes can be executed.
               </p>
             </div>
             <button

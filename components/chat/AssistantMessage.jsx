@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import {
   ShieldAlert,
   Copy,
@@ -16,7 +16,7 @@ import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
 import { formatMessageTime } from '@/lib/dateUtils';
 import { APP_CONFIG } from '@/lib/constants';
 
-export default function AssistantMessage({ message }) {
+function AssistantMessage({ message }) {
   const [copied, setCopied] = useState(false);
   const [showSources, setShowSources] = useState(false);
 
@@ -179,3 +179,5 @@ export default function AssistantMessage({ message }) {
     </div>
   );
 }
+
+export default memo(AssistantMessage);

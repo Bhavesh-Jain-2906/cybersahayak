@@ -18,10 +18,13 @@ export async function POST(req) {
       );
     }
 
-    const trimmed = query.trim();
+    const trimmed = query.trim().slice(0, 500);
+    const parsedTopK = typeof topK === 'number' && !isNaN(topK) ? Math.min(Math.max(topK, 1), 10) : 3;
+    const parsedMinScore = typeof minScore === 'number' && !isNaN(minScore) ? Math.max(0, Math.min(minScore, 1)) : 0.15;
+
     const results = await retrieveLegalContext(trimmed, {
-      topK: Math.min(Math.max(topK, 1), 10),
-      minScore,
+      topK: parsedTopK,
+      minScore: parsedMinScore,
     });
 
     const formattedContext = formatRetrievedContext(results);
@@ -38,7 +41,7 @@ export async function POST(req) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Internal server error during knowledge retrieval.',
+        error: 'An internal error occurred during knowledge retrieval.',
       },
       { status: 500 }
     );

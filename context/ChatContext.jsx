@@ -232,18 +232,26 @@ export function ChatProvider({ children }) {
       const existingConv = conversations.find((c) => c.id === targetConvId);
       currentHistory = existingConv ? existingConv.messages : [];
 
-      // Append user message to existing conversation
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === targetConvId
-            ? {
-                ...c,
-                updatedAt: new Date().toISOString(),
-                messages: [...c.messages, userMessage],
-              }
-            : c
-        )
-      );
+      // Avoid duplicate user message bubble if this is a retry of the same message
+      const isAlreadyLastMsg =
+        existingConv &&
+        existingConv.messages.length > 0 &&
+        existingConv.messages[existingConv.messages.length - 1].role === 'user' &&
+        existingConv.messages[existingConv.messages.length - 1].content === trimmed;
+
+      if (!isAlreadyLastMsg) {
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === targetConvId
+              ? {
+                  ...c,
+                  updatedAt: new Date().toISOString(),
+                  messages: [...c.messages, userMessage],
+                }
+              : c
+          )
+        );
+      }
     }
 
     // Set loading indicator
@@ -341,43 +349,76 @@ export function ChatProvider({ children }) {
     [sendMessage]
   );
 
+  // Memoize the context value to eliminate wasteful re-renders of the entire app
+  const contextValue = useMemo(
+    () => ({
+      conversations,
+      filteredConversations,
+      activeId,
+      activeConversation,
+      searchQuery,
+      setSearchQuery,
+      isLoading,
+      error,
+      clearError,
+      retryLastMessage,
+      isMobileSidebarOpen,
+      setIsMobileSidebarOpen,
+      isDesktopSidebarOpen,
+      toggleDesktopSidebar,
+      isSettingsOpen,
+      setIsSettingsOpen,
+      activeView,
+      setActiveView,
+      profileSettings,
+      updateProfileSettings,
+      quizStats,
+      recordQuizResult,
+      recentlyViewedArticles,
+      recordArticleView,
+      startChatWithPrompt,
+      createNewChat,
+      selectConversation,
+      renameConversation,
+      deleteConversation,
+      clearAllConversations,
+      sendMessage,
+      mounted,
+    }),
+    [
+      conversations,
+      filteredConversations,
+      activeId,
+      activeConversation,
+      searchQuery,
+      isLoading,
+      error,
+      clearError,
+      retryLastMessage,
+      isMobileSidebarOpen,
+      isDesktopSidebarOpen,
+      toggleDesktopSidebar,
+      isSettingsOpen,
+      activeView,
+      profileSettings,
+      updateProfileSettings,
+      quizStats,
+      recordQuizResult,
+      recentlyViewedArticles,
+      recordArticleView,
+      startChatWithPrompt,
+      createNewChat,
+      selectConversation,
+      renameConversation,
+      deleteConversation,
+      clearAllConversations,
+      sendMessage,
+      mounted,
+    ]
+  );
+
   return (
-    <ChatContext.Provider
-      value={{
-        conversations,
-        filteredConversations,
-        activeId,
-        activeConversation,
-        searchQuery,
-        setSearchQuery,
-        isLoading,
-        error,
-        clearError,
-        retryLastMessage,
-        isMobileSidebarOpen,
-        setIsMobileSidebarOpen,
-        isDesktopSidebarOpen,
-        toggleDesktopSidebar,
-        isSettingsOpen,
-        setIsSettingsOpen,
-        activeView,
-        setActiveView,
-        profileSettings,
-        updateProfileSettings,
-        quizStats,
-        recordQuizResult,
-        recentlyViewedArticles,
-        recordArticleView,
-        startChatWithPrompt,
-        createNewChat,
-        selectConversation,
-        renameConversation,
-        deleteConversation,
-        clearAllConversations,
-        sendMessage,
-        mounted,
-      }}
-    >
+    <ChatContext.Provider value={contextValue}>
       {children}
     </ChatContext.Provider>
   );

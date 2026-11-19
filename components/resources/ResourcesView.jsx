@@ -49,7 +49,7 @@ export default function ResourcesView() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm md:text-base">
               <Clock className="w-5 h-5" />
-              <span>The "Golden Hour" Protocol for Financial Cyber Fraud</span>
+              <span>The &quot;Golden Hour&quot; Protocol for Financial Cyber Fraud</span>
             </div>
             <a
               href={`tel:${APP_CONFIG.nationalHelpline}`}
@@ -61,7 +61,7 @@ export default function ResourcesView() {
           </div>
 
           <p className="text-xs md:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-            If you have suffered an unauthorized UPI, banking, or credit card deduction, reporting within the first <strong>2 to 3 hours</strong> allows the Indian Cyber Crime Coordination Centre (I4C) system to freeze the fraudster's beneficiary bank accounts before the money is withdrawn.
+            If you have suffered an unauthorized UPI, banking, or credit card deduction, reporting within the first <strong>2 to 3 hours</strong> allows the Indian Cyber Crime Coordination Centre (I4C) system to freeze the fraudster&apos;s beneficiary bank accounts before the money is withdrawn.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2">
@@ -172,7 +172,7 @@ export default function ResourcesView() {
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#050917] border border-slate-200 dark:border-blue-950 flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-              <span>WhatsApp / Telegram chat export without deleting the scammer's thread.</span>
+              <span>WhatsApp / Telegram chat export without deleting the scammer&apos;s thread.</span>
             </div>
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#050917] border border-slate-200 dark:border-blue-950 flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />

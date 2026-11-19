@@ -180,18 +180,24 @@ function renderInline(text) {
             {token.val}
           </code>
         );
-      case 'link':
+      case 'link': {
+        const rawUrl = (token.url || '').trim();
+        // Prevent javascript:, data:, and other malicious URL protocols
+        const isSafeProtocol = /^(https?:\/\/|tel:|mailto:|\/|#)/i.test(rawUrl);
+        const safeHref = isSafeProtocol ? rawUrl : '#';
+
         return (
           <a
             key={idx}
-            href={token.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={safeHref}
+            target={safeHref.startsWith('http') ? '_blank' : undefined}
+            rel={safeHref.startsWith('http') ? 'noopener noreferrer' : undefined}
             className="text-blue-600 dark:text-blue-400 underline underline-offset-2 hover:text-blue-700 dark:hover:text-blue-300 font-medium drop-shadow-[0_0_6px_rgba(59,130,246,0.3)] transition-colors"
           >
             {token.text}
           </a>
         );
+      }
       default:
         return <span key={idx}>{token.val}</span>;
     }

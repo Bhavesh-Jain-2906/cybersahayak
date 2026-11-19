@@ -68,21 +68,45 @@ export async function POST(req) {
       );
     }
 
+    // Sanitize and bound history array to prevent payload exhaustion
+    const sanitizedHistory = (Array.isArray(history) ? history : [])
+      .slice(-20)
+      .filter((m) => m && typeof m === 'object' && typeof m.content === 'string')
+      .map((m) => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content.slice(0, 4000),
+      }));
+
+    // Sanitize clarifications list
+    const sanitizedClarifications = (Array.isArray(clarificationsAsked) ? clarificationsAsked : [])
+      .filter((q) => typeof q === 'string' && q.trim().length > 0)
+      .slice(-15);
+
+    // Sanitize conversation identifier
+    const safeConvId = typeof conversationId === 'string' && conversationId.trim()
+      ? conversationId.trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100)
+      : 'session-' + Date.now();
+
     // 2. Execute LangGraph.js Workflow
     const result = await runCyberSahayakWorkflow({
       message: trimmedMessage,
-      history,
-      conversationId: conversationId || 'session-' + Date.now(),
-      clarificationsAsked,
+      history: sanitizedHistory,
+      conversationId: safeConvId,
+      clarificationsAsked: sanitizedClarifications,
     });
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error('[API /api/chat] LangGraph Error:', error);
+    // Sanitize error response: do not expose internal stack traces or raw API key details
+    const safeErrorMessage = error?.message && !error.message.includes('apiKey') && !error.message.includes('sk-')
+      ? error.message
+      : 'An unexpected error occurred while processing your request. Please try again.';
+
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'An unexpected error occurred in the LangGraph workflow.',
+        error: safeErrorMessage,
       },
       { status: 500 }
     );
