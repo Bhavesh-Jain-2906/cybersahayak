@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile from database
+  // Fetch user profile from database in background
   const refreshProfile = useCallback(async (userId) => {
     if (!userId || !supabase) {
       setProfile(null);
@@ -33,6 +33,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
+    // Safety timeout: Never keep the user waiting more than 2 seconds for initial session check
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        setLoading(false);
+      }
+    }, 2000);
+
     async function initializeAuth() {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
@@ -43,14 +50,18 @@ export function AuthProvider({ children }) {
         if (mounted) {
           setSession(initialSession);
           setUser(initialSession?.user || null);
-          if (initialSession?.user) {
-            await refreshProfile(initialSession.user.id);
-          }
           setLoading(false);
+          clearTimeout(safetyTimer);
+
+          if (initialSession?.user) {
+            refreshProfile(initialSession.user.id);
+          }
         }
       } catch (err) {
         console.error('[Auth] Initialization error:', err);
         if (mounted) setLoading(false);
+      } finally {
+        clearTimeout(safetyTimer);
       }
     }
 
@@ -62,24 +73,24 @@ export function AuthProvider({ children }) {
       setSession(currentSession);
       const currentUser = currentSession?.user || null;
       setUser(currentUser);
+      setLoading(false);
 
       if (currentUser) {
-        await refreshProfile(currentUser.id);
+        refreshProfile(currentUser.id);
       } else {
         setProfile(null);
       }
-      setLoading(false);
     });
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, [supabase, refreshProfile]);
 
   // Sign In with email and password
   const signInWithPassword = useCallback(async ({ email, password }) => {
-    // Client-side validations
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPassword = (password || '').trim();
 
@@ -116,7 +127,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setSession(data.session);
       if (data.user) {
-        await refreshProfile(data.user.id);
+        refreshProfile(data.user.id);
       }
       return { success: true, user: data.user, session: data.session };
     } catch (err) {
@@ -162,29 +173,24 @@ export function AuthProvider({ children }) {
         return { success: false, error: error.message };
       }
 
-      // If session is returned (email confirmation disabled in Supabase), user is logged in
       if (data.session) {
         setUser(data.user);
         setSession(data.session);
-        // Ensure profile record has the name
         try {
           await supabase.from('profiles').upsert({
             id: data.user.id,
             name: cleanName,
             email: cleanEmail,
           });
-        } catch {
-          // ignore if trigger already handled it
-        }
-        await refreshProfile(data.user.id);
+        } catch {}
+        refreshProfile(data.user.id);
         return { success: true, user: data.user, session: data.session };
       }
 
-      // If user created but needs confirmation
       return {
         success: true,
         user: data.user,
-        message: 'Account created successfully! If email confirmation is enabled, please verify your email before signing in.',
+        message: 'Account created successfully! You can now sign in.',
       };
     } catch (err) {
       return { success: false, error: err.message || 'An unexpected error occurred during sign up.' };

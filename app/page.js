@@ -17,10 +17,13 @@ export default function HomePage() {
   const { activeView } = useChat();
   const { user, loading } = useAuth();
 
-  // Loading state while checking auth session
+  // Loading state while checking auth session (with fallback styles)
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen w-screen bg-black text-white">
+      <div
+        className="flex flex-col items-center justify-center min-h-screen w-full bg-black text-white"
+        style={{ backgroundColor: '#030612', color: '#ffffff' }}
+      >
         <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-400 mb-4 animate-pulse">
           <ShieldAlert className="w-6 h-6" />
         </div>
