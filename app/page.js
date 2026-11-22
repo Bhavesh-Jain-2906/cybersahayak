@@ -8,6 +8,7 @@ import DashboardView from '@/components/dashboard/DashboardView';
 import AwarenessView from '@/components/awareness/AwarenessView';
 import QuizView from '@/components/quiz/QuizView';
 import ResourcesView from '@/components/resources/ResourcesView';
+import AdminConsoleView from '@/components/admin/AdminConsoleView';
 import SettingsModal from '@/components/modals/SettingsModal';
 import AuthScreen from '@/components/auth/AuthScreen';
 import { useChat } from '@/context/ChatContext';
@@ -53,6 +54,7 @@ export default function HomePage() {
         {activeView === 'awareness' && <AwarenessView />}
         {activeView === 'quiz' && <QuizView />}
         {activeView === 'resources' && <ResourcesView />}
+        {activeView === 'admin' && <AdminConsoleView />}
       </main>
 
       {/* Settings & Profile Modal */}

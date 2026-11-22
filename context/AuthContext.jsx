@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getUserProfile, updateUserProfile } from '@/lib/supabase/db';
 
@@ -12,6 +12,14 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Determine if the active user holds Administrator privileges
+  const isAdmin = useMemo(() => {
+    return (
+      user?.app_metadata?.role === 'admin' ||
+      user?.app_metadata?.isAdmin === true
+    );
+  }, [user]);
 
   // Fetch user profile from database in background
   const refreshProfile = useCallback(async (userId) => {
@@ -94,18 +102,20 @@ export function AuthProvider({ children }) {
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPassword = (password || '').trim();
 
-    if (!cleanEmail) {
-      return { success: false, error: 'Email address is required.' };
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      return { success: false, error: 'Please enter a valid email address.' };
-    }
-    if (!cleanPassword) {
-      return { success: false, error: 'Password is required.' };
-    }
-    if (cleanPassword.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters long.' };
+    {
+      if (!cleanEmail) {
+        return { success: false, error: 'Email address is required.' };
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        return { success: false, error: 'Please enter a valid email address (e.g. user@example.com).' };
+      }
+      if (!cleanPassword) {
+        return { success: false, error: 'Password is required.' };
+      }
+      if (cleanPassword.length < 6) {
+        return { success: false, error: 'Password must be at least 6 characters long.' };
+      }
     }
 
     try {
@@ -117,7 +127,7 @@ export function AuthProvider({ children }) {
       if (error) {
         let msg = error.message;
         if (msg.includes('Invalid login credentials')) {
-          msg = 'Invalid email or password. Please verify your credentials or register a new account.';
+          msg = 'Invalid credentials. Please verify your email/username and password.';
         } else if (msg.includes('Email not confirmed')) {
           msg = 'Email address has not been confirmed. Please check your inbox or disable email confirmation in Supabase.';
         }
@@ -165,6 +175,7 @@ export function AuthProvider({ children }) {
         options: {
           data: {
             name: cleanName,
+            role: 'user',
           },
         },
       });
@@ -233,6 +244,7 @@ export function AuthProvider({ children }) {
         profile,
         session,
         loading,
+        isAdmin,
         signInWithPassword,
         signUpWithPassword,
         signOut,

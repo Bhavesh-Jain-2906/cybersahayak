@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   PhoneCall,
   KeyRound,
-  Sparkles,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/lib/constants';
@@ -31,7 +31,6 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
 
@@ -43,36 +42,6 @@ export default function AuthScreen() {
     }
   };
 
-  // 1-Click Demo Sign In for instant access
-  const handleQuickDemo = async () => {
-    setErrorMessage('');
-    setSuccessNotice('');
-    setDemoLoading(true);
-
-    try {
-      const result = await signInWithPassword({
-        email: 'demo.citizen@gmail.com',
-        password: 'Password!123',
-      });
-
-      if (!result.success) {
-        // If not created yet, try register then login
-        const regResult = await signUpWithPassword({
-          name: 'Demo Citizen',
-          email: 'demo.citizen@gmail.com',
-          password: 'Password!123',
-        });
-        if (!regResult.success) {
-          setErrorMessage(regResult.error || 'Failed to sign in with demo account.');
-        }
-      }
-    } catch (err) {
-      setErrorMessage(err.message || 'Failed to initialize demo session.');
-    } finally {
-      setDemoLoading(false);
-    }
-  };
-
   // Validate and submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,44 +50,45 @@ export default function AuthScreen() {
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
+    {
+      if (mode === 'register') {
+        const cleanName = name.trim();
+        if (!cleanName) {
+          setErrorMessage('Please enter your full name.');
+          return;
+        }
+        if (cleanName.length < 2) {
+          setErrorMessage('Name must be at least 2 characters long.');
+          return;
+        }
+      }
 
-    if (mode === 'register') {
-      const cleanName = name.trim();
-      if (!cleanName) {
-        setErrorMessage('Please enter your full name.');
+      if (!cleanEmail) {
+        setErrorMessage('Please enter your email address.');
         return;
       }
-      if (cleanName.length < 2) {
-        setErrorMessage('Name must be at least 2 characters long.');
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        setErrorMessage('Please enter a valid email address (e.g. user@example.com).');
         return;
       }
-    }
 
-    if (!cleanEmail) {
-      setErrorMessage('Please enter your email address.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      setErrorMessage('Please enter a valid email address (e.g., user@example.com).');
-      return;
-    }
-
-    if (!cleanPassword) {
-      setErrorMessage('Please enter your password.');
-      return;
-    }
-
-    if (cleanPassword.length < 6) {
-      setErrorMessage('Password must contain at least 6 characters.');
-      return;
-    }
-
-    if (mode === 'register') {
-      if (cleanPassword !== confirmPassword.trim()) {
-        setErrorMessage('Passwords do not match. Please verify both fields.');
+      if (!cleanPassword) {
+        setErrorMessage('Please enter your password.');
         return;
+      }
+
+      if (cleanPassword.length < 6) {
+        setErrorMessage('Password must contain at least 6 characters.');
+        return;
+      }
+
+      if (mode === 'register') {
+        if (cleanPassword !== confirmPassword.trim()) {
+          setErrorMessage('Passwords do not match. Please verify both fields.');
+          return;
+        }
       }
     }
 
@@ -177,7 +147,7 @@ export default function AuthScreen() {
             </span>
           </div>
           <p className="text-xs text-blue-300/60 max-w-xs mx-auto">
-            Secure Cybercrime Guidance, Threat Awareness & Immediate Action Platform
+            Secure Cybercrime Guidance, Threat Awareness & Incident Response Platform
           </p>
         </div>
 
@@ -255,15 +225,15 @@ export default function AuthScreen() {
 
             <div>
               <label className="block text-xs font-medium text-blue-200/80 mb-1">
-                Email Address
+                {mode === 'login' ? 'Email Address or Username' : 'Email Address'}
               </label>
               <div className="relative flex items-center">
                 <Mail className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={handleInputChange(setEmail)}
-                  placeholder="your.email@example.com"
+                  placeholder={mode === 'login' ? 'your.email@example.com or admin' : 'your.email@example.com'}
                   autoComplete="email"
                   className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                 />
@@ -339,7 +309,7 @@ export default function AuthScreen() {
 
             <button
               type="submit"
-              disabled={submitting || demoLoading}
+              disabled={submitting}
               className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-cool-blue hover:shadow-cool-blue-lg active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
@@ -356,30 +326,8 @@ export default function AuthScreen() {
             </button>
           </form>
 
-          {/* Quick Demo Login Option */}
-          <div className="mt-4 pt-3.5 border-t border-blue-950/60">
-            <button
-              type="button"
-              onClick={handleQuickDemo}
-              disabled={submitting || demoLoading}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold hover:text-white transition-all disabled:opacity-50"
-            >
-              {demoLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
-                  <span>Entering CyberSahayak Demo...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  <span>⚡ 1-Click Demo Login (Immediate Access)</span>
-                </>
-              )}
-            </button>
-          </div>
-
           {/* Privacy & RLS Assurance */}
-          <div className="mt-3.5 flex items-center justify-between text-[11px] text-blue-300/50">
+          <div className="mt-4 pt-3.5 border-t border-blue-950/60 flex items-center justify-between text-[11px] text-blue-300/50">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
               <span>Row-Level Security Active</span>

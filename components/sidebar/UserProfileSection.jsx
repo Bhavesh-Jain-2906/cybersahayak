@@ -8,24 +8,48 @@ import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function UserProfileSection() {
   const { setIsSettingsOpen, profileSettings } = useChat();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
 
-  const displayName = profile?.name || user?.user_metadata?.name || profileSettings?.displayName || 'Digital Citizen';
+  const displayName = isAdmin
+    ? 'System Administrator'
+    : profile?.name || user?.user_metadata?.name || profileSettings?.displayName || 'Digital Citizen';
   const displayEmail = user?.email || (profileSettings?.primaryBank ? `${profileSettings.primaryBank} User` : 'Protected Session');
 
   return (
     <div className="border-t border-slate-200 dark:border-blue-950/60 p-3 flex items-center justify-between gap-2 bg-slate-50/50 dark:bg-[#020409]">
       <div className="flex items-center gap-2.5 min-w-0">
-        <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-500 dark:text-blue-400 shrink-0 shadow-cool-blue-xs">
-          <User className="w-4 h-4" />
-          <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-black shadow-[0_0_6px_rgba(59,130,246,0.8)]" />
+        <div
+          className={`relative flex items-center justify-center w-8 h-8 rounded-full shrink-0 shadow-cool-blue-xs ${
+            isAdmin
+              ? 'bg-amber-500/15 border border-amber-500/40 text-amber-400'
+              : 'bg-blue-500/10 border border-blue-500/30 text-blue-500 dark:text-blue-400'
+          }`}
+        >
+          {isAdmin ? <ShieldCheck className="w-4 h-4 text-amber-400" /> : <User className="w-4 h-4" />}
+          <span
+            className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ring-2 ring-white dark:ring-black ${
+              isAdmin
+                ? 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]'
+                : 'bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.8)]'
+            }`}
+          />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <span className="text-xs font-semibold text-slate-800 dark:text-blue-100 truncate">
+            <span
+              className={`text-xs font-semibold truncate ${
+                isAdmin ? 'text-amber-300' : 'text-slate-800 dark:text-blue-100'
+              }`}
+            >
               {displayName}
             </span>
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-400 shrink-0 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
+            {isAdmin ? (
+              <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                ADMIN
+              </span>
+            ) : (
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400 shrink-0 drop-shadow-[0_0_4px_rgba(59,130,246,0.6)]" />
+            )}
           </div>
           <p className="text-[11px] text-slate-400 dark:text-blue-300/50 truncate">
             {displayEmail}

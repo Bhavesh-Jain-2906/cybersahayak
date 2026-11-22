@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useChat } from '@/context/ChatContext';
+import { useAuth } from '@/context/AuthContext';
 import ChatHistoryList from './ChatHistoryList';
 import UserProfileSection from './UserProfileSection';
 
@@ -31,6 +32,8 @@ export default function Sidebar() {
     quizStats,
     activeConversation,
   } = useChat();
+
+  const { isAdmin } = useAuth();
 
   // Keyboard shortcut listener for Ctrl+K / Cmd+K to start New Chat
   useEffect(() => {
@@ -197,6 +200,26 @@ export default function Sidebar() {
             <ShieldCheck className="w-4 h-4 text-cyan-500 dark:text-cyan-400 shrink-0" />
             <span className="truncate">Help & Resources</span>
           </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => {
+                setActiveView('admin');
+                setIsMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${
+                activeView === 'admin'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)] font-semibold'
+                  : 'text-amber-400/80 hover:bg-amber-500/10 hover:text-amber-300'
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="truncate font-semibold">Admin Console</span>
+              <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                ROOT
+              </span>
+            </button>
+          )}
         </nav>
 
         {/* Conversations Header with New Chat */}
