@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   PhoneCall,
   KeyRound,
-  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/lib/constants';
@@ -225,7 +224,7 @@ export default function AuthScreen() {
 
             <div>
               <label className="block text-xs font-medium text-blue-200/80 mb-1">
-                {mode === 'login' ? 'Email Address or Username' : 'Email Address'}
+                Email Address
               </label>
               <div className="relative flex items-center">
                 <Mail className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
@@ -233,7 +232,7 @@ export default function AuthScreen() {
                   type="text"
                   value={email}
                   onChange={handleInputChange(setEmail)}
-                  placeholder={mode === 'login' ? 'your.email@example.com or admin' : 'your.email@example.com'}
+                  placeholder="your.email@example.com"
                   autoComplete="email"
                   className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                 />
@@ -325,6 +324,7 @@ export default function AuthScreen() {
               )}
             </button>
           </form>
+
 
           {/* Privacy & RLS Assurance */}
           <div className="mt-4 pt-3.5 border-t border-blue-950/60 flex items-center justify-between text-[11px] text-blue-300/50">
