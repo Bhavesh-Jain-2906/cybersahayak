@@ -103,20 +103,15 @@ export async function POST(req) {
       ? conversationId.trim()
       : null;
 
-    // If conversation ID is provided, verify ownership in Supabase
     if (targetConvId) {
-      const { data: existingConv, error: fetchErr } = await supabase
+      // Query conversation within the authenticated user's RLS scope
+      const { data: existingConv } = await supabase
         .from('conversations')
         .select('id, user_id, title')
         .eq('id', targetConvId)
         .maybeSingle();
 
-      if (fetchErr) {
-        console.error('[API /api/chat] Error checking conversation:', fetchErr.message);
-      }
-
       if (existingConv) {
-        // Enforce strict user isolation: User cannot access another user's conversation
         if (existingConv.user_id !== user.id) {
           return NextResponse.json(
             {
@@ -127,7 +122,8 @@ export async function POST(req) {
           );
         }
       } else {
-        // ID provided but not in DB yet: create it for this user
+        // Not found in user's visible rows. Attempt to create with this ID.
+        // If it already belongs to another user, PostgreSQL returns error 23505 (unique_violation).
         const newTitle = trimmedMessage.length > 34
           ? trimmedMessage.slice(0, 34) + '...'
           : trimmedMessage;
@@ -145,8 +141,32 @@ export async function POST(req) {
           .single();
 
         if (createErr) {
+          // If code 23505 or duplicate key violation, this conversation belongs to another user!
+          if (
+            createErr.code === '23505' ||
+            createErr.message?.includes('duplicate key') ||
+            createErr.message?.includes('unique constraint')
+          ) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'Forbidden. You do not have permission to access or modify this conversation.',
+              },
+              { status: 403 }
+            );
+          }
+
           console.error('[API /api/chat] Error creating initial conversation:', createErr.message);
-        } else if (createdConv) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Failed to initialize conversation in database.',
+            },
+            { status: 500 }
+          );
+        }
+
+        if (createdConv) {
           targetConvId = createdConv.id;
         }
       }
@@ -174,8 +194,8 @@ export async function POST(req) {
       }
     }
 
-    // 4. Save User Message in PostgreSQL
-    const { data: savedUserMsg } = await supabase
+    // 4. Save User Message in PostgreSQL (Strictly checked against RLS)
+    const { data: savedUserMsg, error: userMsgErr } = await supabase
       .from('messages')
       .insert([
         {
@@ -187,6 +207,17 @@ export async function POST(req) {
       ])
       .select('id, created_at')
       .single();
+
+    if (userMsgErr) {
+      console.error('[API /api/chat] Message insert blocked by RLS:', userMsgErr.message);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Forbidden. You do not have permission to add messages to this conversation.',
+        },
+        { status: 403 }
+      );
+    }
 
     // 5. Execute LangGraph.js Workflow with thread isolation
     const result = await runCyberSahayakWorkflow({
@@ -218,7 +249,7 @@ export async function POST(req) {
       .select('id, created_at')
       .single();
 
-    // 7. Update conversation timestamp
+    // 7. Touch updated_at on conversation
     await supabase
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })

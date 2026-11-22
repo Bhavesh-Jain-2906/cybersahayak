@@ -42,9 +42,9 @@ if (!SUPABASE_ANON_KEY) {
 }
 
 const runId = Date.now();
-const userA_email = `test_user_a_${runId}@cybersahayak.test`;
+const userA_email = `test_user_a_${runId}@gmail.com`;
 const userA_pass = `Pass_A_${runId}!123`;
-const userB_email = `test_user_b_${runId}@cybersahayak.test`;
+const userB_email = `test_user_b_${runId}@gmail.com`;
 const userB_pass = `Pass_B_${runId}!123`;
 
 async function runTests() {
