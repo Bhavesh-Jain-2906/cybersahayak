@@ -1,57 +1,102 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import {
-  getStoredConversations,
-  saveStoredConversations,
-  getStoredActiveId,
-  saveStoredActiveId,
-} from '@/lib/storage';
-import { getSampleResponse } from '@/lib/sampleResponses';
+  getConversations,
+  updateConversationTitle,
+  deleteConversation as deleteConversationFromDb,
+} from '@/lib/supabase/db';
 
 const ChatContext = createContext(null);
 
 export function ChatProvider({ children }) {
+  const { supabase, user, profile, session } = useAuth();
+
   const [conversations, setConversations] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDbLoading, setIsDbLoading] = useState(false);
   const [error, setError] = useState(null); // { message, retryPrompt, targetConvId }
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeView, setActiveView] = useState('chat'); // 'chat' | 'dashboard' | 'awareness' | 'quiz' | 'resources'
+
   const [profileSettings, setProfileSettings] = useState({
     displayName: 'Digital Citizen',
     primaryBank: 'State Bank of India',
     emergencyContact: '',
     conversationTone: 'calm_practical',
   });
+
   const [quizStats, setQuizStats] = useState({
     completed: false,
     score: 0,
     total: 8,
     lastCompletedDate: null,
   });
+
   const [recentlyViewedArticles, setRecentlyViewedArticles] = useState(['upi-fraud', 'phishing']);
   const [mounted, setMounted] = useState(false);
 
-  // Initialize from storage on client mount
+  // Sync profile display name when user/profile changes
   useEffect(() => {
-    const savedConvs = getStoredConversations();
-    const savedActiveId = getStoredActiveId();
+    if (profile?.name || user?.user_metadata?.name) {
+      const activeName = profile?.name || user?.user_metadata?.name;
+      setProfileSettings((prev) => ({
+        ...prev,
+        displayName: activeName,
+      }));
+    }
+  }, [profile, user]);
 
-    setConversations(savedConvs);
-    if (savedActiveId && savedConvs.some((c) => c.id === savedActiveId)) {
-      setActiveId(savedActiveId);
-    } else if (savedConvs.length > 0) {
-      setActiveId(savedConvs[0].id);
+  // Load user's conversations from Supabase PostgreSQL whenever user logs in
+  const loadConversationsFromDb = useCallback(async () => {
+    if (!supabase || !user) {
+      setConversations([]);
+      setActiveId(null);
+      return;
     }
 
+    setIsDbLoading(true);
+    try {
+      const dbConversations = await getConversations(supabase);
+      setConversations(dbConversations);
+      if (dbConversations.length > 0) {
+        // Default to the most recent conversation if none selected
+        setActiveId((prevId) => {
+          if (prevId && dbConversations.some((c) => c.id === prevId)) {
+            return prevId;
+          }
+          return dbConversations[0].id;
+        });
+      } else {
+        setActiveId(null);
+      }
+    } catch (err) {
+      console.error('[ChatContext] Failed to load conversations from Supabase:', err);
+    } finally {
+      setIsDbLoading(false);
+    }
+  }, [supabase, user]);
+
+  useEffect(() => {
+    loadConversationsFromDb();
+  }, [loadConversationsFromDb]);
+
+  // Hydrate local UI preferences
+  useEffect(() => {
     try {
       const savedProfile = localStorage.getItem('cybersahayak_profile');
       if (savedProfile) {
-        setProfileSettings(JSON.parse(savedProfile));
+        const parsed = JSON.parse(savedProfile);
+        setProfileSettings((prev) => ({
+          ...prev,
+          ...parsed,
+          displayName: profile?.name || user?.user_metadata?.name || parsed.displayName || 'Digital Citizen',
+        }));
       }
       const savedQuiz = localStorage.getItem('cybersahayak_quiz');
       if (savedQuiz) {
@@ -62,11 +107,11 @@ export function ChatProvider({ children }) {
         setRecentlyViewedArticles(JSON.parse(savedArticles));
       }
     } catch {
-      // Ignore localStorage access exceptions
+      // Ignore localStorage exceptions
     }
 
     setMounted(true);
-  }, []);
+  }, [profile, user]);
 
   // Save profile updates
   const updateProfileSettings = useCallback((newSettings) => {
@@ -105,20 +150,6 @@ export function ChatProvider({ children }) {
     });
   }, []);
 
-  // Sync conversations to localStorage whenever they change
-  useEffect(() => {
-    if (mounted) {
-      saveStoredConversations(conversations);
-    }
-  }, [conversations, mounted]);
-
-  // Sync activeId to localStorage
-  useEffect(() => {
-    if (mounted) {
-      saveStoredActiveId(activeId);
-    }
-  }, [activeId, mounted]);
-
   // Current active conversation
   const activeConversation = useMemo(() => {
     return conversations.find((c) => c.id === activeId) || null;
@@ -131,7 +162,7 @@ export function ChatProvider({ children }) {
     return conversations.filter(
       (c) =>
         c.title.toLowerCase().includes(q) ||
-        c.messages.some((m) => m.content.toLowerCase().includes(q))
+        (c.messages || []).some((m) => m.content && m.content.toLowerCase().includes(q))
     );
   }, [conversations, searchQuery]);
 
@@ -150,39 +181,78 @@ export function ChatProvider({ children }) {
     setIsMobileSidebarOpen(false);
   }, []);
 
-  // Rename a conversation
-  const renameConversation = useCallback((id, newTitle) => {
-    if (!newTitle || !newTitle.trim()) return;
-    setConversations((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, title: newTitle.trim(), updatedAt: new Date().toISOString() } : c))
-    );
-  }, []);
+  // Rename a conversation in Supabase & local state
+  const renameConversation = useCallback(
+    async (id, newTitle) => {
+      if (!newTitle || !newTitle.trim()) return;
+      const cleanTitle = newTitle.trim();
 
-  // Delete a conversation
-  const deleteConversation = useCallback((id) => {
-    setConversations((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      if (activeId === id) {
-        setActiveId(next.length > 0 ? next[0].id : null);
+      // Optimistic local update
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, title: cleanTitle, updatedAt: new Date().toISOString() } : c
+        )
+      );
+
+      // Persist in Supabase
+      if (supabase) {
+        try {
+          await updateConversationTitle(supabase, id, cleanTitle);
+        } catch (err) {
+          console.error('[ChatContext] Failed to rename conversation in Supabase:', err);
+        }
       }
-      return next;
-    });
-    setError(null);
-  }, [activeId]);
+    },
+    [supabase]
+  );
 
-  // Clear all conversations
-  const clearAllConversations = useCallback(() => {
+  // Delete a conversation in Supabase & local state
+  const deleteConversation = useCallback(
+    async (id) => {
+      // Optimistic local update
+      setConversations((prev) => {
+        const next = prev.filter((c) => c.id !== id);
+        if (activeId === id) {
+          setActiveId(next.length > 0 ? next[0].id : null);
+        }
+        return next;
+      });
+      setError(null);
+
+      // Persist deletion in Supabase (cascades to messages)
+      if (supabase) {
+        try {
+          await deleteConversationFromDb(supabase, id);
+        } catch (err) {
+          console.error('[ChatContext] Failed to delete conversation in Supabase:', err);
+        }
+      }
+    },
+    [activeId, supabase]
+  );
+
+  // Clear all conversations for the user
+  const clearAllConversations = useCallback(async () => {
+    const idsToDelete = conversations.map((c) => c.id);
     setConversations([]);
     setActiveId(null);
     setError(null);
-  }, []);
+
+    if (supabase && idsToDelete.length > 0) {
+      try {
+        await supabase.from('conversations').delete().in('id', idsToDelete);
+      } catch (err) {
+        console.error('[ChatContext] Failed to clear all conversations:', err);
+      }
+    }
+  }, [conversations, supabase]);
 
   // Toggle desktop sidebar
   const toggleDesktopSidebar = useCallback(() => {
     setIsDesktopSidebarOpen((prev) => !prev);
   }, []);
 
-  // Helper to generate a clean title from the first prompt
+  // Helper to generate a clean title from the prompt
   const generateTitle = (text) => {
     const cleaned = text.trim().replace(/\s+/g, ' ');
     if (cleaned.length <= 34) return cleaned;
@@ -194,26 +264,36 @@ export function ChatProvider({ children }) {
     setError(null);
   }, []);
 
-  // Send a user message to the live LangGraph AI backend
+  // Send a user message to the live LangGraph AI backend with Supabase sync
   const sendMessage = async (content) => {
     if (!content || !content.trim() || isLoading) return;
 
     const trimmed = content.trim();
     setError(null);
 
+    // Generate UUID if creating new conversation
+    const isUuid = (id) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+
+    let targetConvId = activeId;
+    let currentHistory = [];
+
+    const tempUserMsgId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : 'msg-' + Date.now() + '-user';
+
     const userMessage = {
-      id: 'msg-' + Date.now() + '-user',
+      id: tempUserMsgId,
       role: 'user',
       content: trimmed,
       createdAt: new Date().toISOString(),
     };
 
-    let targetConvId = activeId;
-    let currentHistory = [];
-
-    // If currently no active conversation, create one
+    // If currently no active conversation, create one locally with UUID
     if (!targetConvId || !conversations.some((c) => c.id === targetConvId)) {
-      targetConvId = 'conv-' + Date.now();
+      targetConvId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'conv-' + Date.now();
 
       const newConv = {
         id: targetConvId,
@@ -228,11 +308,9 @@ export function ChatProvider({ children }) {
       setActiveId(targetConvId);
       currentHistory = [];
     } else {
-      // Find current conversation messages for history isolation
       const existingConv = conversations.find((c) => c.id === targetConvId);
-      currentHistory = existingConv ? existingConv.messages : [];
+      currentHistory = existingConv ? existingConv.messages || [] : [];
 
-      // Avoid duplicate user message bubble if this is a retry of the same message
       const isAlreadyLastMsg =
         existingConv &&
         existingConv.messages.length > 0 &&
@@ -246,7 +324,7 @@ export function ChatProvider({ children }) {
               ? {
                   ...c,
                   updatedAt: new Date().toISOString(),
-                  messages: [...c.messages, userMessage],
+                  messages: [...(c.messages || []), userMessage],
                 }
               : c
           )
@@ -254,14 +332,13 @@ export function ChatProvider({ children }) {
       }
     }
 
-    // Set loading indicator
     setIsLoading(true);
 
     try {
       const activeConv = conversations.find((c) => c.id === targetConvId);
       const priorClarifications = activeConv?.clarificationsAsked || [];
 
-      // Convert history for the API call (isolate to only valid user/assistant turns)
+      // Format previous history for API request
       const formattedHistory = currentHistory
         .filter((m) => m && (m.role === 'user' || m.role === 'assistant'))
         .map((m) => ({
@@ -269,11 +346,17 @@ export function ChatProvider({ children }) {
           content: m.content,
         }));
 
+      // Prepare headers with Supabase Auth token
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           message: trimmed,
           conversationId: targetConvId,
@@ -288,8 +371,10 @@ export function ChatProvider({ children }) {
         throw new Error(data.error || `Server responded with status ${res.status}`);
       }
 
+      const actualConvId = data.conversationId || targetConvId;
+
       const assistantMessage = {
-        id: 'msg-' + Date.now() + '-assistant',
+        id: data.assistantMessageId || ('msg-' + Date.now() + '-assistant'),
         role: 'assistant',
         content: data.response,
         createdAt: new Date().toISOString(),
@@ -299,24 +384,36 @@ export function ChatProvider({ children }) {
         metadata: data.metadata,
       };
 
-      // Append assistant message and record any new clarifications
+      // Append assistant message and record clarifications
       setConversations((prev) =>
         prev.map((c) => {
-          if (c.id === targetConvId) {
+          if (c.id === targetConvId || c.id === actualConvId) {
             const nextClarifications = Array.isArray(data.clarificationsAsked)
               ? Array.from(new Set([...(c.clarificationsAsked || []), ...data.clarificationsAsked]))
               : c.clarificationsAsked || [];
 
+            // Replace temp user message ID if server provided one
+            const updatedMessages = (c.messages || []).map((m) =>
+              m.id === tempUserMsgId && data.userMessageId
+                ? { ...m, id: data.userMessageId }
+                : m
+            );
+
             return {
               ...c,
+              id: actualConvId,
               updatedAt: new Date().toISOString(),
-              messages: [...c.messages, assistantMessage],
+              messages: [...updatedMessages, assistantMessage],
               clarificationsAsked: nextClarifications,
             };
           }
           return c;
         })
       );
+
+      if (actualConvId !== targetConvId) {
+        setActiveId(actualConvId);
+      }
 
       setIsLoading(false);
     } catch (err) {
@@ -329,7 +426,7 @@ export function ChatProvider({ children }) {
     }
   };
 
-  // Retry the message that previously failed
+  // Retry failed prompt
   const retryLastMessage = useCallback(() => {
     if (!error || !error.retryPrompt) return;
     const promptToRetry = error.retryPrompt;
@@ -337,7 +434,7 @@ export function ChatProvider({ children }) {
     sendMessage(promptToRetry);
   }, [error, sendMessage]);
 
-  // Start chat with a specific prompt (from dashboard or awareness articles)
+  // Start chat with prompt
   const startChatWithPrompt = useCallback(
     (prompt) => {
       setActiveView('chat');
@@ -349,7 +446,6 @@ export function ChatProvider({ children }) {
     [sendMessage]
   );
 
-  // Memoize the context value to eliminate wasteful re-renders of the entire app
   const contextValue = useMemo(
     () => ({
       conversations,
@@ -359,6 +455,7 @@ export function ChatProvider({ children }) {
       searchQuery,
       setSearchQuery,
       isLoading,
+      isDbLoading,
       error,
       clearError,
       retryLastMessage,
@@ -383,6 +480,7 @@ export function ChatProvider({ children }) {
       deleteConversation,
       clearAllConversations,
       sendMessage,
+      loadConversationsFromDb,
       mounted,
     }),
     [
@@ -392,6 +490,7 @@ export function ChatProvider({ children }) {
       activeConversation,
       searchQuery,
       isLoading,
+      isDbLoading,
       error,
       clearError,
       retryLastMessage,
@@ -413,15 +512,12 @@ export function ChatProvider({ children }) {
       deleteConversation,
       clearAllConversations,
       sendMessage,
+      loadConversationsFromDb,
       mounted,
     ]
   );
 
-  return (
-    <ChatContext.Provider value={contextValue}>
-      {children}
-    </ChatContext.Provider>
-  );
+  return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;
 }
 
 export function useChat() {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Moon,
@@ -15,10 +15,12 @@ import {
   Info,
   CheckCircle2,
   Lock,
-  Building2,
   Cpu,
+  LogOut,
+  Mail,
 } from 'lucide-react';
 import { useChat } from '@/context/ChatContext';
+import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { APP_CONFIG } from '@/lib/constants';
 
@@ -46,21 +48,30 @@ export default function SettingsModal() {
     updateProfileSettings,
   } = useChat();
 
+  const { user, profile, updateName, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'preferences' | 'data' | 'about'
   const [confirmClear, setConfirmClear] = useState(false);
   const [saveToast, setSaveToast] = useState(false);
 
   // Form local state
-  const [displayName, setDisplayName] = useState(profileSettings.displayName || 'Digital Citizen');
+  const [displayName, setDisplayName] = useState(
+    profile?.name || user?.user_metadata?.name || profileSettings.displayName || 'Digital Citizen'
+  );
   const [primaryBank, setPrimaryBank] = useState(profileSettings.primaryBank || 'State Bank of India (SBI)');
   const [emergencyContact, setEmergencyContact] = useState(profileSettings.emergencyContact || '');
   const [conversationTone, setConversationTone] = useState(profileSettings.conversationTone || 'calm_practical');
   const [languagePreference, setLanguagePreference] = useState(profileSettings.languagePreference || 'english');
 
+  useEffect(() => {
+    if (profile?.name || user?.user_metadata?.name) {
+      setDisplayName(profile?.name || user?.user_metadata?.name);
+    }
+  }, [profile, user]);
+
   if (!isSettingsOpen) return null;
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
     updateProfileSettings({
       displayName,
@@ -69,6 +80,11 @@ export default function SettingsModal() {
       conversationTone,
       languagePreference,
     });
+
+    if (updateName && displayName.trim()) {
+      await updateName(displayName.trim());
+    }
+
     setSaveToast(true);
     setTimeout(() => setSaveToast(false), 2500);
   };
@@ -111,7 +127,7 @@ export default function SettingsModal() {
                 Preferences & Profile Settings
               </h3>
               <p className="text-[11px] text-slate-400 dark:text-blue-300/50">
-                Tailor your cyber defense assistant and local privacy
+                Tailor your cyber defense assistant and account preferences
               </p>
             </div>
           </div>
@@ -135,7 +151,7 @@ export default function SettingsModal() {
             }`}
           >
             <User className="w-3.5 h-3.5" />
-            <span>Profile & Theme</span>
+            <span>Profile & Account</span>
           </button>
 
           <button
@@ -180,6 +196,30 @@ export default function SettingsModal() {
           {/* TAB 1: Profile & Appearance */}
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="space-y-4">
+              {/* Authenticated Email Badge */}
+              {user?.email && (
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#060a17] border border-slate-200 dark:border-blue-950 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-blue-400 shrink-0" />
+                    <div>
+                      <span className="text-[11px] text-slate-400 dark:text-blue-300/50 block">Signed in as</span>
+                      <span className="font-semibold text-slate-800 dark:text-white">{user.email}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      signOut();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-500/20 text-xs font-medium transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-medium text-slate-700 dark:text-blue-200 mb-1">
                   Display Name
@@ -192,7 +232,7 @@ export default function SettingsModal() {
                   className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#060a14] border border-slate-200 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <p className="mt-1 text-[11px] text-slate-400 dark:text-blue-300/50">
-                  Used in your greeting and protection session indicator.
+                  Synced with your Supabase user profile.
                 </p>
               </div>
 
@@ -381,11 +421,12 @@ export default function SettingsModal() {
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#060a17] border border-slate-200 dark:border-blue-950 text-xs space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-slate-800 dark:text-blue-100">
-                      Browser-Encrypted Conversations
+                    <div className="font-medium text-slate-800 dark:text-blue-100 flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Persistent Supabase PostgreSQL Storage</span>
                     </div>
                     <div className="text-[11px] text-slate-400 dark:text-blue-300/40">
-                      {conversations.length} conversation{conversations.length === 1 ? '' : 's'} stored exclusively on this device
+                      {conversations.length} conversation{conversations.length === 1 ? '' : 's'} secured with Row-Level Security
                     </div>
                   </div>
 
@@ -401,10 +442,10 @@ export default function SettingsModal() {
 
                 <div className="pt-2 border-t border-slate-200 dark:border-blue-950/60">
                   <div className="flex items-center gap-1.5 text-slate-700 dark:text-blue-200 font-semibold mb-1">
-                    <Lock className="w-3.5 h-3.5 text-blue-400" /> Confidentiality Guarantee
+                    <Lock className="w-3.5 h-3.5 text-blue-400" /> Multi-User Isolation Guarantee
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-blue-300/60 leading-relaxed">
-                    CyberSahayak does not sell or harvest user telemetry. Your queries are sent strictly to infer answers via stateful LangGraph nodes and discarded from memory upon completion.
+                    Conversations and messages are bound to your unique cryptographic user ID via Supabase PostgreSQL RLS. No other user can access, read, or modify your transcripts.
                   </p>
                 </div>
               </div>
@@ -415,7 +456,7 @@ export default function SettingsModal() {
                     Are you sure you want to permanently delete all conversations?
                   </p>
                   <p className="text-[11px] text-red-500/80">
-                    This action will wipe all conversation transcripts from your browser.
+                    This action will wipe all conversation transcripts from the PostgreSQL database.
                   </p>
                   <div className="flex gap-2 pt-1">
                     <button
@@ -461,8 +502,8 @@ export default function SettingsModal() {
                     <span className="font-semibold text-slate-700 dark:text-blue-200">LangGraph.js StateGraph</span>
                   </div>
                   <div className="p-2 rounded-lg bg-white dark:bg-black/50 border border-slate-200 dark:border-blue-950/60">
-                    <span className="text-slate-400 dark:text-blue-300/40 block">Legal RAG Corpus</span>
-                    <span className="font-semibold text-slate-700 dark:text-blue-200">53 Vectors (IT Act)</span>
+                    <span className="text-slate-400 dark:text-blue-300/40 block">Authentication & DB</span>
+                    <span className="font-semibold text-slate-700 dark:text-blue-200">Supabase Auth + PostgreSQL</span>
                   </div>
                   <div className="p-2 rounded-lg bg-white dark:bg-black/50 border border-slate-200 dark:border-blue-950/60">
                     <span className="text-slate-400 dark:text-blue-300/40 block">Primary Provider</span>
@@ -533,7 +574,7 @@ export default function SettingsModal() {
           <div className="flex items-center gap-2">
             <span>CyberSahayak v{APP_CONFIG.version}</span>
             <span className="w-1 h-1 rounded-full bg-blue-500" />
-            <span>Encrypted Session</span>
+            <span>RLS Protected</span>
           </div>
           <button
             onClick={() => setIsSettingsOpen(false)}

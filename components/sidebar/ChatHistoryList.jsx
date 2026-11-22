@@ -3,11 +3,20 @@
 import React from 'react';
 import { groupConversationsByDate } from '@/lib/dateUtils';
 import ConversationItem from './ConversationItem';
-import { SearchX, MessagesSquare } from 'lucide-react';
+import { SearchX, MessagesSquare, Loader2 } from 'lucide-react';
 import { useChat } from '@/context/ChatContext';
 
 export default function ChatHistoryList() {
-  const { filteredConversations, searchQuery } = useChat();
+  const { filteredConversations, searchQuery, isDbLoading } = useChat();
+
+  if (isDbLoading && filteredConversations.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <Loader2 className="w-5 h-5 text-blue-500 animate-spin mb-2" />
+        <p className="text-xs text-slate-400 dark:text-blue-300/50">Loading conversations...</p>
+      </div>
+    );
+  }
 
   if (filteredConversations.length === 0) {
     if (searchQuery.trim()) {

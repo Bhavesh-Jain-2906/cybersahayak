@@ -109,7 +109,7 @@ export default function DashboardView() {
               {conversations.length}
             </div>
             <div className="mt-1 text-[11px] text-slate-400 dark:text-blue-400/50">
-              Stored locally & encrypted
+              PostgreSQL & RLS protected
             </div>
           </div>
 

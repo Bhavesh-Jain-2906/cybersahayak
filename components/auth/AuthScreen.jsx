@@ -1,0 +1,320 @@
+'use client';
+
+import React, { useState } from 'react';
+import {
+  ShieldAlert,
+  ShieldCheck,
+  Lock,
+  Mail,
+  User,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  PhoneCall,
+  KeyRound,
+} from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { APP_CONFIG } from '@/lib/constants';
+
+export default function AuthScreen() {
+  const { signInWithPassword, signUpWithPassword } = useAuth();
+
+  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successNotice, setSuccessNotice] = useState('');
+
+  // Validate and submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessNotice('');
+
+    // Clean inputs
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    // Validations
+    if (mode === 'register') {
+      const cleanName = name.trim();
+      if (!cleanName) {
+        setErrorMessage('Please enter your full name.');
+        return;
+      }
+      if (cleanName.length < 2) {
+        setErrorMessage('Name must be at least 2 characters long.');
+        return;
+      }
+    }
+
+    if (!cleanEmail) {
+      setErrorMessage('Please enter your email address.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setErrorMessage('Please enter a valid email address (e.g., user@example.com).');
+      return;
+    }
+
+    if (!cleanPassword) {
+      setErrorMessage('Please enter your password.');
+      return;
+    }
+
+    if (cleanPassword.length < 6) {
+      setErrorMessage('Password must contain at least 6 characters.');
+      return;
+    }
+
+    if (mode === 'register') {
+      if (cleanPassword !== confirmPassword.trim()) {
+        setErrorMessage('Passwords do not match. Please verify both fields.');
+        return;
+      }
+    }
+
+    setSubmitting(true);
+
+    try {
+      if (mode === 'login') {
+        const result = await signInWithPassword({
+          email: cleanEmail,
+          password: cleanPassword,
+        });
+
+        if (!result.success) {
+          setErrorMessage(result.error || 'Failed to sign in. Please verify your credentials.');
+        }
+      } else {
+        const result = await signUpWithPassword({
+          name: name.trim(),
+          email: cleanEmail,
+          password: cleanPassword,
+        });
+
+        if (!result.success) {
+          setErrorMessage(result.error || 'Failed to create account.');
+        } else if (result.message) {
+          setSuccessNotice(result.message);
+          setMode('login');
+        }
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-full flex flex-col justify-center items-center p-4 bg-slate-950 text-slate-100 selection:bg-blue-600/30 selection:text-blue-200 relative overflow-hidden">
+      {/* Background glowing gradients */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+      {/* Main Container */}
+      <div className="w-full max-w-md relative z-10 animate-fade-in">
+        {/* Brand Header */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 text-white shadow-cool-blue mb-3.5">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              CyberSahayak
+            </h1>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-[0_0_8px_rgba(59,130,246,0.2)]">
+              AI Guide
+            </span>
+          </div>
+          <p className="text-xs text-blue-300/60 max-w-xs mx-auto">
+            Secure Cybercrime Guidance, Threat Awareness & Immediate Action Platform
+          </p>
+        </div>
+
+        {/* Card Box */}
+        <div className="rounded-2xl bg-[#030612]/90 border border-blue-950/80 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(37,99,235,0.15)] p-6 md:p-8 backdrop-blur-xl">
+          {/* Mode Switcher Tabs */}
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-900/80 border border-blue-950/60 mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('login');
+                setErrorMessage('');
+                setSuccessNotice('');
+              }}
+              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                mode === 'login'
+                  ? 'bg-blue-600 text-white shadow-cool-blue-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('register');
+                setErrorMessage('');
+                setSuccessNotice('');
+              }}
+              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
+                mode === 'register'
+                  ? 'bg-blue-600 text-white shadow-cool-blue-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Create Account
+            </button>
+          </div>
+
+          {/* Success Banner */}
+          {successNotice && (
+            <div className="mb-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5 animate-fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span>{successNotice}</span>
+            </div>
+          )}
+
+          {/* Error Banner */}
+          {errorMessage && (
+            <div className="mb-4 p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs flex items-start gap-2.5 animate-fade-in">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'register' && (
+              <div>
+                <label className="block text-xs font-medium text-blue-200/80 mb-1.5">
+                  Full Name
+                </label>
+                <div className="relative flex items-center">
+                  <User className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-medium text-blue-200/80 mb-1.5">
+                Email Address
+              </label>
+              <div className="relative flex items-center">
+                <Mail className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                  autoComplete="email"
+                  className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-blue-200/80 mb-1.5">
+                Password
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === 'register' ? 'Minimum 6 characters' : 'Enter your password'}
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                  className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-slate-400 hover:text-blue-300 transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            {mode === 'register' && (
+              <div>
+                <label className="block text-xs font-medium text-blue-200/80 mb-1.5">
+                  Confirm Password
+                </label>
+                <div className="relative flex items-center">
+                  <KeyRound className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    autoComplete="new-password"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                  />
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-cool-blue hover:shadow-cool-blue-lg active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{mode === 'login' ? 'Authenticating...' : 'Creating Account...'}</span>
+                </>
+              ) : (
+                <>
+                  <span>{mode === 'login' ? 'Sign In to CyberSahayak' : 'Create Protected Account'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Privacy & RLS Assurance */}
+          <div className="mt-5 pt-4 border-t border-blue-950/60 flex items-center justify-between text-[11px] text-blue-300/50">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+              <span>Row-Level Security Active</span>
+            </span>
+            <span>Zero FIR Drafting</span>
+          </div>
+        </div>
+
+        {/* Emergency National Helpline Badge */}
+        <div className="mt-4 text-center">
+          <a
+            href={`tel:${APP_CONFIG.nationalHelpline}`}
+            className="inline-flex items-center gap-1.5 text-xs text-amber-400/80 hover:text-amber-300 transition-colors"
+          >
+            <PhoneCall className="w-3.5 h-3.5" />
+            <span>Under active attack? Call <strong>1930</strong> National Helpline immediately</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}

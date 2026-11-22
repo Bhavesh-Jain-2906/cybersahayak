@@ -1,5 +1,6 @@
 import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { ChatProvider } from '@/context/ChatContext';
 
 export const metadata = {
@@ -22,9 +23,11 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning className="dark">
       <body className="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-shield-950 font-sans antialiased text-slate-900 dark:text-slate-100">
         <ThemeProvider>
-          <ChatProvider>
-            {children}
-          </ChatProvider>
+          <AuthProvider>
+            <ChatProvider>
+              {children}
+            </ChatProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
