@@ -21,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
-      <body className="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-shield-950 font-sans antialiased text-slate-900 dark:text-slate-100">
+      <body className="min-h-screen w-full bg-slate-50 dark:bg-shield-950 font-sans antialiased text-slate-900 dark:text-slate-100 overflow-x-hidden">
         <ThemeProvider>
           <AuthProvider>
             <ChatProvider>
