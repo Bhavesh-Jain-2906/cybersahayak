@@ -13,7 +13,7 @@ async function runIngestion() {
   // Step 1: Locate the PDF document
   const pdfCandidates = [
     path.join(__dirname, '..', 'cyber-law.pdf'),
-    path.join(process.cwd(), 'stage3', 'cyber-law.pdf'),
+    path.join(process.cwd(), 'archive', 'stage_snapshots', 'stage3', 'cyber-law.pdf'),
     path.join(process.cwd(), 'cyber-law.pdf'),
   ];
 
