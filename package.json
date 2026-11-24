@@ -10,6 +10,7 @@
     "test-chat": "node scripts/test-chat.js",
     "test-graph": "node scripts/test-langgraph.js",
     "test-rag": "node scripts/test-retrieval.js",
+    "eval": "node scripts/eval-llm.js",
     "ingest": "node scripts/ingest.js"
   },
   "dependencies": {
