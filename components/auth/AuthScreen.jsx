@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   KeyRound,
   ArrowLeft,
-  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/lib/constants';
@@ -25,54 +24,20 @@ const NOIR_PURPLE_PARTICLES = [
   { bg: '#A855F7', glow: 'rgba(147, 51, 234, 0.45)' }, // vibrant purple
 ];
 
-const GMAIL_REGEX = /^[^\s@]+@(gmail|googlemail)\.com$/i;
-
-function GoogleLogo() {
-  return (
-    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="#4285F4"
-        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"
-      />
-    </svg>
-  );
-}
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AuthScreen() {
-  const {
-    signInWithPassword,
-    signInWithGoogle,
-    requestAuthOtp,
-    verifyEmailOtp,
-    completePasswordResetWithOtp,
-  } = useAuth();
+  const { signInWithPassword, signUpWithPassword, sendPasswordResetEmail } = useAuth();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
-  const [loginMethod, setLoginMethod] = useState('password'); // 'password' | 'otp'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpChallenge, setOtpChallenge] = useState(null); // { purpose, otpType, email, otpLength, name, password }
   const [showPassword, setShowPassword] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
-  const [googleSubmitting, setGoogleSubmitting] = useState(false);
-  const [resendingOtp, setResendingOtp] = useState(false);
-  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [resetCooldown, setResetCooldown] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
 
@@ -224,12 +189,12 @@ export default function AuthScreen() {
     }
   }, []);
 
-  // Cooldown timer for resending Gmail OTPs
+  // Cooldown timer for resending password-reset links
   useEffect(() => {
-    if (otpCooldown <= 0) return undefined;
-    const timer = setTimeout(() => setOtpCooldown((prev) => prev - 1), 1000);
+    if (resetCooldown <= 0) return undefined;
+    const timer = setTimeout(() => setResetCooldown((prev) => prev - 1), 1000);
     return () => clearTimeout(timer);
-  }, [otpCooldown]);
+  }, [resetCooldown]);
 
   // Auto-clear error when user modifies any input
   const handleInputChange = (setter) => (e) => {
@@ -242,74 +207,8 @@ export default function AuthScreen() {
   // Switch between login, registration, and forgot-password cleanly
   const switchMode = (targetMode) => {
     setMode(targetMode);
-    setOtpChallenge(null);
-    setOtpCode('');
-    setOtpCooldown(0);
     setErrorMessage('');
     setSuccessNotice('');
-  };
-
-  // Toggle between Gmail+Password+OTP and Passwordless Gmail OTP sign-in
-  const switchLoginMethod = (method) => {
-    setLoginMethod(method);
-    setOtpChallenge(null);
-    setOtpCode('');
-    setErrorMessage('');
-    setSuccessNotice('');
-  };
-
-  // Cancel active OTP step to edit email or credentials
-  const cancelOtpStep = () => {
-    setOtpChallenge(null);
-    setOtpCode('');
-    setErrorMessage('');
-    setSuccessNotice('');
-  };
-
-  // Launch Google OAuth ("Continue with Google")
-  const handleGoogleSignIn = async () => {
-    setErrorMessage('');
-    setSuccessNotice('');
-    setGoogleSubmitting(true);
-
-    try {
-      const result = await signInWithGoogle();
-      if (!result.success) {
-        setErrorMessage(result.error || 'Could not launch Google Sign-In.');
-        setGoogleSubmitting(false);
-      }
-      // On success, Supabase redirects to Google OAuth consent screen
-    } catch (err) {
-      setErrorMessage(err?.message || 'Unable to start Google Sign-In.');
-      setGoogleSubmitting(false);
-    }
-  };
-
-  // Resend Gmail OTP during verification or password recovery step
-  const handleResendOtp = async () => {
-    if (!otpChallenge || otpCooldown > 0) return;
-    setResendingOtp(true);
-    setErrorMessage('');
-
-    try {
-      const result = await requestAuthOtp({
-        purpose: otpChallenge.purpose,
-        email: otpChallenge.email,
-        password: otpChallenge.password,
-        name: otpChallenge.name,
-      });
-
-      if (!result.success) {
-        setErrorMessage(result.error || 'Could not resend OTP email.');
-      } else {
-        setOtpCooldown(30);
-        setSuccessNotice(result.message);
-      }
-    } catch (err) {
-      setErrorMessage(err?.message || 'Failed to resend OTP email.');
-    } finally {
-      setResendingOtp(false);
-    }
   };
 
   // Validate and submit form
@@ -318,197 +217,104 @@ export default function AuthScreen() {
     setErrorMessage('');
     setSuccessNotice('');
 
-    // STEP 2A: Password recovery OTP + new password submission
-    if (mode === 'forgot' && otpChallenge?.purpose === 'recovery') {
-      const cleanOtp = otpCode.replace(/\s+/g, '').trim();
-      const cleanNewPass = password.trim();
-      const cleanConfirm = confirmPassword.trim();
-
-      if (!/^\d{6,8}$/.test(cleanOtp)) {
-        setErrorMessage(`Please enter the ${otpChallenge.otpLength}-digit OTP sent to ${otpChallenge.email}.`);
-        return;
-      }
-      if (!cleanNewPass || cleanNewPass.length < 6) {
-        setErrorMessage('New password must contain at least 6 characters.');
-        return;
-      }
-      if (cleanNewPass !== cleanConfirm) {
-        setErrorMessage('Passwords do not match. Please verify both fields.');
-        return;
-      }
-
-      setSubmitting(true);
-      try {
-        const result = await completePasswordResetWithOtp({
-          email: otpChallenge.email,
-          otp: cleanOtp,
-          newPassword: cleanNewPass,
-        });
-
-        if (!result.success) {
-          setErrorMessage(result.error || 'Could not reset password.');
-          return;
-        }
-
-        const recoveredEmail = otpChallenge.email;
-        setOtpChallenge(null);
-        setOtpCode('');
-        setPassword('');
-        setConfirmPassword('');
-        setEmail(recoveredEmail);
-        setLoginMethod('password');
-        setMode('login');
-        setSuccessNotice(result.message);
-      } catch (err) {
-        setErrorMessage(err?.message || 'Unexpected error while resetting password.');
-      } finally {
-        setSubmitting(false);
-      }
-      return;
-    }
-
-    // STEP 2B: Verify Gmail OTP for Sign In or Create Account
-    if (otpChallenge && (mode === 'login' || mode === 'register')) {
-      const cleanOtp = otpCode.replace(/\s+/g, '').trim();
-      if (!/^\d{6,8}$/.test(cleanOtp)) {
-        setErrorMessage(`Please enter the ${otpChallenge.otpLength}-digit OTP code sent to ${otpChallenge.email}.`);
-        return;
-      }
-
-      setSubmitting(true);
-      try {
-        const result = await verifyEmailOtp({
-          email: otpChallenge.email,
-          otp: cleanOtp,
-          otpType: otpChallenge.otpType,
-          name: otpChallenge.name,
-        });
-
-        if (!result.success) {
-          setErrorMessage(result.error || 'Invalid or expired OTP code.');
-        }
-      } catch (err) {
-        setErrorMessage(err?.message || 'Unexpected error verifying OTP.');
-      } finally {
-        setSubmitting(false);
-      }
-      return;
-    }
-
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    // STEP 1A: Forgot password -> request Gmail reset OTP
     if (mode === 'forgot') {
       if (!cleanEmail) {
-        setErrorMessage('Please enter your registered Gmail address.');
+        setErrorMessage('Please enter your email address.');
         return;
       }
-      if (!GMAIL_REGEX.test(cleanEmail)) {
-        setErrorMessage('Please enter a valid @gmail.com address (e.g. name@gmail.com).');
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setErrorMessage('Please enter a valid email address (e.g. user@example.com).');
         return;
       }
 
       setSubmitting(true);
       try {
-        const result = await requestAuthOtp({
-          purpose: 'recovery',
-          email: cleanEmail,
-        });
-
+        const result = await sendPasswordResetEmail(cleanEmail);
         if (!result.success) {
-          setErrorMessage(result.error || 'Could not send reset OTP.');
+          setErrorMessage(result.error || 'Could not send reset link.');
         } else {
-          setOtpChallenge({
-            purpose: 'recovery',
-            otpType: 'recovery',
-            email: result.email || cleanEmail,
-            otpLength: result.otpLength || 8,
-          });
-          setOtpCode('');
-          setPassword('');
-          setConfirmPassword('');
-          setOtpCooldown(30);
           setSuccessNotice(result.message);
+          setResetCooldown(30);
         }
       } catch (err) {
-        setErrorMessage(err?.message || 'Unexpected error sending reset OTP.');
+        setErrorMessage(err?.message || 'Unexpected error sending reset email.');
       } finally {
         setSubmitting(false);
       }
       return;
     }
+    {
+      if (mode === 'register') {
+        const cleanName = name.trim();
+        if (!cleanName) {
+          setErrorMessage('Please enter your full name.');
+          return;
+        }
+        if (cleanName.length < 2) {
+          setErrorMessage('Name must be at least 2 characters long.');
+          return;
+        }
+      }
 
-    // STEP 1B: Validate real Gmail + credentials, then request Gmail OTP
-    if (mode === 'register') {
-      const cleanName = name.trim();
-      if (!cleanName || cleanName.length < 2) {
-        setErrorMessage('Name must be at least 2 characters long.');
+      if (!cleanEmail) {
+        setErrorMessage('Please enter your email address.');
         return;
       }
-    }
 
-    if (!cleanEmail) {
-      setErrorMessage('Please enter your Gmail address.');
-      return;
-    }
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setErrorMessage('Please enter a valid email address (e.g. user@example.com).');
+        return;
+      }
 
-    if (!GMAIL_REGEX.test(cleanEmail)) {
-      setErrorMessage(
-        'Fake or non-Gmail addresses are not allowed. Use a real @gmail.com address or click Continue with Google.'
-      );
-      return;
-    }
-
-    const requiresPasswordInput = mode === 'register' || loginMethod === 'password';
-    if (requiresPasswordInput) {
       if (!cleanPassword) {
         setErrorMessage('Please enter your password.');
         return;
       }
+
       if (cleanPassword.length < 6) {
         setErrorMessage('Password must contain at least 6 characters.');
         return;
       }
-      if (mode === 'register' && cleanPassword !== confirmPassword.trim()) {
-        setErrorMessage('Passwords do not match. Please verify both fields.');
-        return;
+
+      if (mode === 'register') {
+        if (cleanPassword !== confirmPassword.trim()) {
+          setErrorMessage('Passwords do not match. Please verify both fields.');
+          return;
+        }
       }
     }
 
-    const otpPurpose =
-      mode === 'register'
-        ? 'signup'
-        : loginMethod === 'otp'
-          ? 'login-otp'
-          : 'login';
-
     setSubmitting(true);
-    try {
-      const result = await requestAuthOtp({
-        purpose: otpPurpose,
-        name: mode === 'register' ? name.trim() : '',
-        email: cleanEmail,
-        password: requiresPasswordInput ? cleanPassword : '',
-      });
 
-      if (!result.success) {
-        setErrorMessage(result.error || 'Failed to send verification OTP to Gmail.');
-      } else {
-        setOtpChallenge({
-          purpose: otpPurpose,
-          otpType: result.otpType,
-          email: result.email || cleanEmail,
-          otpLength: result.otpLength || 8,
-          name: mode === 'register' ? name.trim() : '',
-          password: requiresPasswordInput ? cleanPassword : '',
+    try {
+      if (mode === 'login') {
+        const result = await signInWithPassword({
+          email: cleanEmail,
+          password: cleanPassword,
         });
-        setOtpCode('');
-        setOtpCooldown(30);
-        setSuccessNotice(result.message);
+
+        if (!result.success) {
+          setErrorMessage(result.error || 'Failed to sign in. Please verify your credentials.');
+        }
+      } else {
+        const result = await signUpWithPassword({
+          name: name.trim(),
+          email: cleanEmail,
+          password: cleanPassword,
+        });
+
+        if (!result.success) {
+          setErrorMessage(result.error || 'Failed to create account.');
+        } else if (result.message) {
+          setSuccessNotice(result.message);
+          setMode('login');
+        }
       }
     } catch (err) {
-      setErrorMessage(err?.message || 'An unexpected error occurred. Please try again.');
+      setErrorMessage(err.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -613,7 +419,7 @@ export default function AuthScreen() {
               />
               {/* Editorial Header Microcopy */}
               <div className="relative mb-5">
-                {mode === 'forgot' ? (
+                {mode === 'forgot' && (
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
@@ -622,46 +428,27 @@ export default function AuthScreen() {
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Back to Sign In</span>
                   </button>
-                ) : (
-                  otpChallenge && (
-                    <button
-                      type="button"
-                      onClick={cancelOtpStep}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] mb-3 transition-colors focus:outline-none"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Change Gmail / edit details</span>
-                    </button>
-                  )
                 )}
 
                 <h2 className="text-lg sm:text-xl font-semibold text-white tracking-[-0.02em]">
-                  {otpChallenge?.purpose === 'recovery'
-                    ? 'Enter OTP & new password'
-                    : otpChallenge
-                      ? 'Verify your Gmail OTP'
-                      : mode === 'login'
-                        ? 'Welcome back'
-                        : mode === 'register'
-                          ? 'Create your safe space'
-                          : 'Reset your password'}
+                  {mode === 'login'
+                    ? 'Welcome back'
+                    : mode === 'register'
+                      ? 'Create your safe space'
+                      : 'Reset your password'}
                 </h2>
                 <p className="text-xs text-[#A1A1AA] mt-1">
-                  {otpChallenge?.purpose === 'recovery'
-                    ? `Enter the ${otpChallenge.otpLength}-digit OTP sent to ${otpChallenge.email} and choose a new password.`
-                    : otpChallenge
-                      ? `Enter the ${otpChallenge.otpLength}-digit verification code sent to ${otpChallenge.email}.`
-                      : mode === 'login'
-                        ? 'Sign in with Google or your real Gmail with one-time OTP verification.'
-                        : mode === 'register'
-                          ? 'Verify a real @gmail.com inbox via OTP or continue with Google.'
-                          : 'Enter your registered @gmail.com address to receive a password reset OTP.'}
+                  {mode === 'login'
+                    ? 'Pick up right where you left off in your private cyber guidance hub.'
+                    : mode === 'register'
+                      ? 'Set up an isolated account to save guidance threads and checkup progress.'
+                      : 'Enter your registered email address and we will send a password reset link.'}
                 </p>
               </div>
 
-              {/* Segmented Tab Switcher (Sign In / Create Account) */}
-              {mode !== 'forgot' && !otpChallenge && (
-                <div className="relative grid grid-cols-2 p-1 rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.08] mb-4">
+              {/* Segmented Tab Switcher (Translucent Dark Recess + Subtle Plum Active Tab) */}
+              {mode !== 'forgot' && (
+                <div className="relative grid grid-cols-2 p-1 rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.08] mb-5">
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
@@ -687,38 +474,6 @@ export default function AuthScreen() {
                 </div>
               )}
 
-              {/* Google OAuth Button + Divider */}
-              {mode !== 'forgot' && !otpChallenge && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={googleSubmitting || submitting}
-                    className="w-full h-[42px] px-4 rounded-[8px] bg-[#0D0B12]/60 hover:bg-[#1E172E]/80 border border-white/[0.14] hover:border-[#A855F7]/50 text-white font-medium text-xs sm:text-[13px] flex items-center justify-center gap-2.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {googleSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin text-[#C084FC]" />
-                        <span>Connecting to Google...</span>
-                      </>
-                    ) : (
-                      <>
-                        <GoogleLogo />
-                        <span>Continue with Google</span>
-                      </>
-                    )}
-                  </button>
-
-                  <div className="relative my-4 flex items-center">
-                    <div className="flex-grow border-t border-white/[0.08]" />
-                    <span className="px-3 text-[10px] uppercase tracking-[0.14em] text-[#71717A] font-medium">
-                      or gmail with otp
-                    </span>
-                    <div className="flex-grow border-t border-white/[0.08]" />
-                  </div>
-                </>
-              )}
-
               {/* Success Banner */}
               {successNotice && (
                 <div className="mb-3.5 p-3 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5 animate-fade-in">
@@ -737,388 +492,223 @@ export default function AuthScreen() {
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                {otpChallenge ? (
-                  <>
-                    {/* Gmail OTP Verification Step */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          htmlFor="auth-otp"
-                          className="block text-xs font-medium text-white"
-                        >
-                          Gmail OTP Code
-                        </label>
-                        <button
-                          type="button"
-                          onClick={handleResendOtp}
-                          disabled={resendingOtp || otpCooldown > 0}
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <RefreshCw className={`w-3 h-3 ${resendingOtp ? 'animate-spin' : ''}`} />
-                          <span>
-                            {resendingOtp
-                              ? 'Sending...'
-                              : otpCooldown > 0
-                                ? `Resend in ${otpCooldown}s`
-                                : 'Resend OTP'}
-                          </span>
-                        </button>
-                      </div>
-                      <div className="relative flex items-center">
-                        <KeyRound className="w-4 h-4 absolute left-3.5 text-[#C084FC] pointer-events-none" />
-                        <input
-                          id="auth-otp"
-                          type="text"
-                          inputMode="numeric"
-                          autoComplete="one-time-code"
-                          maxLength={8}
-                          value={otpCode}
-                          onChange={handleInputChange(setOtpCode)}
-                          placeholder={`Enter ${otpChallenge.otpLength}-digit OTP`}
-                          className="w-full pl-10 pr-4 py-2.5 text-sm font-mono tracking-[0.22em] rounded-[8px] bg-[#0D0B12]/65 border border-[#A855F7]/40 text-white placeholder-[#71717A] placeholder:tracking-normal placeholder:font-sans placeholder:text-xs focus:outline-none focus:ring-0 focus:border-[#C084FC] transition-colors"
-                        />
-                      </div>
-                      <p className="text-[11px] text-[#71717A] mt-1.5">
-                        Sent to <span className="text-[#E9D5FF]">{otpChallenge.email}</span> • Check Spam/Promotions if not in Primary.
-                      </p>
-                    </div>
-
-                    {otpChallenge.purpose === 'recovery' && (
-                      <>
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label
-                              htmlFor="reset-new-password"
-                              className="block text-xs font-medium text-white"
-                            >
-                              New Password
-                            </label>
-                            {password.length > 0 && (
-                              <span
-                                className={`text-[10px] font-mono ${
-                                  password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                                }`}
-                              >
-                                {password.length >= 6 ? `✓ ${password.length} chars` : `${password.length}/6 min`}
-                              </span>
-                            )}
-                          </div>
-                          <div className="relative flex items-center">
-                            <Lock className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
-                            <input
-                              id="reset-new-password"
-                              type={showPassword ? 'text' : 'password'}
-                              value={password}
-                              onChange={handleInputChange(setPassword)}
-                              placeholder="Minimum 6 characters"
-                              autoComplete="new-password"
-                              className="w-full pl-10 pr-10 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
-                            />
-                            <button
-                              type="button"
-                              aria-label={showPassword ? 'Hide password' : 'Show password'}
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 text-[#A1A1AA] hover:text-[#D8B4FE] transition-colors p-1 focus:outline-none"
-                            >
-                              {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label
-                              htmlFor="reset-confirm-password"
-                              className="block text-xs font-medium text-white"
-                            >
-                              Confirm New Password
-                            </label>
-                            {confirmPassword.length > 0 && (
-                              <span
-                                className={`text-[10px] font-mono ${
-                                  password === confirmPassword ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                                }`}
-                              >
-                                {password === confirmPassword ? '✓ Passwords match' : 'Must match'}
-                              </span>
-                            )}
-                          </div>
-                          <div className="relative flex items-center">
-                            <KeyRound className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
-                            <input
-                              id="reset-confirm-password"
-                              type={showPassword ? 'text' : 'password'}
-                              value={confirmPassword}
-                              onChange={handleInputChange(setConfirmPassword)}
-                              placeholder="Re-enter your new password"
-                              autoComplete="new-password"
-                              className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full mt-2 flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs sm:text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                {mode === 'register' && (
+                  <div>
+                    <label
+                      htmlFor="auth-name"
+                      className="block text-xs font-medium text-white mb-1.5"
                     >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-[#09090B]" />
-                          <span>
-                            {otpChallenge.purpose === 'recovery' ? 'Updating Password...' : 'Verifying OTP...'}
-                          </span>
-                        </>
-                      ) : (
-                        <span>
-                          {otpChallenge.purpose === 'recovery'
-                            ? 'Verify OTP & Reset Password'
-                            : otpChallenge.purpose === 'signup'
-                              ? 'Verify Gmail & Create Account'
-                              : 'Verify OTP & Sign In'}
-                        </span>
-                      )}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {mode === 'register' && (
-                      <div>
-                        <label
-                          htmlFor="auth-name"
-                          className="block text-xs font-medium text-white mb-1.5"
-                        >
-                          Full Name
-                        </label>
-                        <div className="relative flex items-center">
-                          <User className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
-                          <input
-                            id="auth-name"
-                            type="text"
-                            value={name}
-                            onChange={handleInputChange(setName)}
-                            placeholder="e.g. Rahul Sharma"
-                            className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label
-                          htmlFor="auth-email"
-                          className="block text-xs font-medium text-white"
-                        >
-                          Real Gmail Address
-                        </label>
-                        {mode === 'login' && (
-                          <button
-                            type="button"
-                            onClick={() => switchLoginMethod(loginMethod === 'password' ? 'otp' : 'password')}
-                            className="text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] transition-colors focus:outline-none"
-                          >
-                            {loginMethod === 'password' ? 'Use OTP only' : 'Use password + OTP'}
-                          </button>
-                        )}
-                      </div>
-                      <div className="relative flex items-center">
-                        <Mail className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
-                        <input
-                          id="auth-email"
-                          type="text"
-                          inputMode="email"
-                          value={email}
-                          onChange={handleInputChange(setEmail)}
-                          placeholder="your.name@gmail.com"
-                          autoComplete="email"
-                          className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
-                        />
-                      </div>
+                      Full Name
+                    </label>
+                    <div className="relative flex items-center">
+                      <User className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                      <input
+                        id="auth-name"
+                        type="text"
+                        value={name}
+                        onChange={handleInputChange(setName)}
+                        placeholder="e.g. Rahul Sharma"
+                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                      />
                     </div>
+                  </div>
+                )}
 
-                    {(mode === 'register' || (mode === 'login' && loginMethod === 'password')) && (
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label
-                            htmlFor="auth-password"
-                            className="block text-xs font-medium text-white"
-                          >
-                            Password
-                          </label>
-                          {mode === 'login' ? (
-                            <button
-                              type="button"
-                              onClick={() => switchMode('forgot')}
-                              className="text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] transition-colors focus:outline-none focus-visible:underline"
-                            >
-                              Forgot password?
-                            </button>
-                          ) : (
-                            password.length > 0 && (
-                              <span
-                                className={`text-[10px] font-mono ${
-                                  password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                                }`}
-                              >
-                                {password.length >= 6
-                                  ? `✓ ${password.length} chars (valid)`
-                                  : `${password.length}/6 chars (min 6)`}
-                              </span>
-                            )
-                          )}
-                        </div>
-                        <div className="relative flex items-center">
-                          <Lock className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
-                          <input
-                            id="auth-password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={password}
-                            onChange={handleInputChange(setPassword)}
-                            placeholder={mode === 'register' ? 'Minimum 6 characters' : 'Enter your password'}
-                            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                            className="w-full pl-10 pr-10 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
-                          />
-                          <button
-                            type="button"
-                            aria-label={showPassword ? 'Hide password' : 'Show password'}
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 text-[#A1A1AA] hover:text-[#D8B4FE] transition-colors p-1 focus:outline-none focus-visible:text-[#D8B4FE]"
-                          >
-                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mt-1.5">
-                          <p className="text-[11px] text-[#71717A]">
-                            {mode === 'login'
-                              ? 'We send a real OTP to your Gmail after password check.'
-                              : 'Use a strong password (min 6 chars) + verify Gmail OTP.'}
-                          </p>
-                          {mode === 'login' &&
-                            password.length > 0 &&
-                            email.trim().toLowerCase() !== 'admin' && (
-                              <span
-                                className={`text-[10px] font-mono shrink-0 ${
-                                  password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                                }`}
-                              >
-                                {password.length >= 6 ? '✓ valid' : `${password.length}/6`}
-                              </span>
-                            )}
-                        </div>
-                      </div>
-                    )}
+                <div>
+                  <label
+                    htmlFor="auth-email"
+                    className="block text-xs font-medium text-white mb-1.5"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative flex items-center">
+                    <Mail className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                    <input
+                      id="auth-email"
+                      type="text"
+                      inputMode="email"
+                      value={email}
+                      onChange={handleInputChange(setEmail)}
+                      placeholder="your.email@example.com"
+                      autoComplete="email"
+                      className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                    />
+                  </div>
+                </div>
 
-                    {mode === 'login' && loginMethod === 'otp' && (
-                      <div className="flex items-center justify-between text-[11px] text-[#71717A]">
-                        <span>We&apos;ll email a one-time code to your @gmail.com inbox.</span>
+                {mode !== 'forgot' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label
+                        htmlFor="auth-password"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Password
+                      </label>
+                      {mode === 'login' ? (
                         <button
                           type="button"
                           onClick={() => switchMode('forgot')}
-                          className="font-medium text-[#C084FC] hover:text-[#E9D5FF] shrink-0 ml-2 transition-colors"
+                          className="text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] transition-colors focus:outline-none focus-visible:underline"
                         >
                           Forgot password?
                         </button>
-                      </div>
-                    )}
-
-                    {mode === 'register' && (
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label
-                            htmlFor="auth-confirm-password"
-                            className="block text-xs font-medium text-white"
-                          >
-                            Confirm Password
-                          </label>
-                          {confirmPassword.length > 0 && (
-                            <span
-                              className={`text-[10px] font-mono ${
-                                password === confirmPassword ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                              }`}
-                            >
-                              {password === confirmPassword ? '✓ Passwords match' : 'Must match password'}
-                            </span>
-                          )}
-                        </div>
-                        <div className="relative flex items-center">
-                          <KeyRound className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
-                          <input
-                            id="auth-confirm-password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={confirmPassword}
-                            onChange={handleInputChange(setConfirmPassword)}
-                            placeholder="Re-enter your password"
-                            autoComplete="new-password"
-                            className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={submitting || googleSubmitting}
-                      className="w-full mt-2 flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs sm:text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-[#09090B]" />
-                          <span>Sending Gmail OTP...</span>
-                        </>
-                      ) : mode === 'forgot' ? (
-                        <span>Send Password Reset OTP</span>
-                      ) : mode === 'login' && loginMethod === 'otp' ? (
-                        <span>Send OTP to Gmail</span>
                       ) : (
-                        <span>Send Gmail OTP &amp; Continue</span>
+                        password.length > 0 && (
+                          <span
+                            className={`text-[10px] font-mono ${
+                              password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                            }`}
+                          >
+                            {password.length >= 6
+                              ? `✓ ${password.length} chars (valid)`
+                              : `${password.length}/6 chars (min 6)`}
+                          </span>
+                        )
                       )}
-                    </button>
-                  </>
+                    </div>
+                    <div className="relative flex items-center">
+                      <Lock className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                      <input
+                        id="auth-password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={handleInputChange(setPassword)}
+                        placeholder={mode === 'register' ? 'Minimum 6 characters' : 'Enter your password'}
+                        autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                        className="w-full pl-10 pr-10 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 text-[#A1A1AA] hover:text-[#D8B4FE] transition-colors p-1 focus:outline-none focus-visible:text-[#D8B4FE]"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-1.5">
+                      <p className="text-[11px] text-[#71717A]">
+                        {mode === 'login'
+                          ? 'Encrypted Supabase session • Never share banking OTPs or PINs.'
+                          : 'Use a strong, unique password with at least 6 characters.'}
+                      </p>
+                      {mode === 'login' &&
+                        password.length > 0 &&
+                        email.trim().toLowerCase() !== 'admin' && (
+                          <span
+                            className={`text-[10px] font-mono shrink-0 ${
+                              password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                            }`}
+                          >
+                            {password.length >= 6 ? '✓ valid' : `${password.length}/6`}
+                          </span>
+                        )}
+                    </div>
+                  </div>
                 )}
+
+                {mode === 'register' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label
+                        htmlFor="auth-confirm-password"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Confirm Password
+                      </label>
+                      {confirmPassword.length > 0 && (
+                        <span
+                          className={`text-[10px] font-mono ${
+                            password === confirmPassword ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                          }`}
+                        >
+                          {password === confirmPassword ? '✓ Passwords match' : 'Must match password'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative flex items-center">
+                      <KeyRound className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                      <input
+                        id="auth-confirm-password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={handleInputChange(setConfirmPassword)}
+                        placeholder="Re-enter your password"
+                        autoComplete="new-password"
+                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting || (mode === 'forgot' && resetCooldown > 0)}
+                  className="w-full mt-2 flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs sm:text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-[#09090B]" />
+                      <span>
+                        {mode === 'login'
+                          ? 'Verifying Session...'
+                          : mode === 'register'
+                            ? 'Setting Up Workspace...'
+                            : 'Sending Reset Link...'}
+                      </span>
+                    </>
+                  ) : mode === 'forgot' ? (
+                    <span>
+                      {resetCooldown > 0
+                        ? `Resend Link in ${resetCooldown}s`
+                        : successNotice
+                          ? 'Resend Reset Link'
+                          : 'Send Password Reset Link'}
+                    </span>
+                  ) : (
+                    <span>{mode === 'login' ? 'Continue to Workspace' : 'Create Protected Account'}</span>
+                  )}
+                </button>
               </form>
 
               {/* Clean Monochrome Switch Link with Subtle Purple Accent */}
-              {!otpChallenge && (
-                <div className="mt-4 text-center">
-                  {mode === 'forgot' ? (
-                    <button
-                      type="button"
-                      onClick={() => switchMode('login')}
-                      className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
-                    >
-                      Remembered your password?{' '}
-                      <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
-                        Back to Sign In
-                      </span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
-                      className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
-                    >
-                      {mode === 'login' ? (
-                        <>
-                          New here?{' '}
-                          <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
-                            Create an account
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          Already have an account?{' '}
-                          <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
-                            Sign in instead
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="mt-4 text-center">
+                {mode === 'forgot' ? (
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
+                  >
+                    Remembered your password?{' '}
+                    <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                      Back to Sign In
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+                    className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
+                  >
+                    {mode === 'login' ? (
+                      <>
+                        New here?{' '}
+                        <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                          Create an account
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        Already have an account?{' '}
+                        <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                          Sign in instead
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
 
               {/* Privacy & RLS Assurance */}
               <div className="mt-4 pt-3.5 border-t border-white/[0.08] flex items-center justify-between text-[11px] text-[#A1A1AA]">
