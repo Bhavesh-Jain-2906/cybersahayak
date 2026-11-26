@@ -268,48 +268,14 @@ export function AuthProvider({ children }) {
         requiresEmailVerification: true,
         email: cleanEmail,
         user: data.user,
-        message: `Confirmation link sent to ${cleanEmail}! Click the one-time link in your Gmail inbox (in this same browser) to activate your account.`,
+        message: `Activation link sent to ${cleanEmail}! Click the one-time link in your Gmail inbox to activate your account.`,
       };
     } catch (err) {
       return { success: false, error: err.message || 'An unexpected error occurred during sign up.' };
     }
   }, [supabase, refreshProfile]);
 
-  // Sign in via one-time Gmail magic link
-  const signInWithMagicLink = useCallback(async (email) => {
-    const cleanEmail = (email || '').trim().toLowerCase();
-
-    if (!cleanEmail) {
-      return { success: false, error: 'Please enter your email address.' };
-    }
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      return { success: false, error: 'Please enter a valid email address (e.g. name@gmail.com).' };
-    }
-
-    try {
-      const emailRedirectTo = `${window.location.origin}/auth/callback`;
-      const { error } = await supabase.auth.signInWithOtp({
-        email: cleanEmail,
-        options: {
-          emailRedirectTo,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: formatSupabaseAuthError(error.message) };
-      }
-
-      return {
-        success: true,
-        email: cleanEmail,
-        message: `One-time sign-in link sent to ${cleanEmail}! Open the link in your Gmail inbox (in this same browser) to sign in.`,
-      };
-    } catch (err) {
-      return { success: false, error: err.message || 'Failed to send one-time sign-in link.' };
-    }
-  }, [supabase]);
-
-  // Resend one-time confirmation link for pending signups
+  // Resend one-time activation link for pending signups
   const resendVerificationEmail = useCallback(async (email) => {
     const cleanEmail = (email || '').trim().toLowerCase();
     if (!EMAIL_REGEX.test(cleanEmail)) {
@@ -491,7 +457,6 @@ export function AuthProvider({ children }) {
         isAdmin,
         isRecoveryMode,
         signInWithPassword,
-        signInWithMagicLink,
         signUpWithPassword,
         resendVerificationEmail,
         sendPasswordResetEmail,
