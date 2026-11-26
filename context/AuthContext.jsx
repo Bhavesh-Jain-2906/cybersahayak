@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getUserProfile, updateUserProfile } from '@/lib/supabase/db';
 
@@ -38,6 +38,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const keepRecoveryOnSignOutRef = useRef(false);
 
   // Determine if the active user holds Administrator privileges
   const isAdmin = useMemo(() => {
@@ -133,7 +134,11 @@ export function AuthProvider({ children }) {
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecoveryMode(true);
       } else if (event === 'SIGNED_OUT') {
-        setIsRecoveryMode(false);
+        if (keepRecoveryOnSignOutRef.current) {
+          keepRecoveryOnSignOutRef.current = false;
+        } else {
+          setIsRecoveryMode(false);
+        }
       }
 
       if (currentUser) {
@@ -335,7 +340,8 @@ export function AuthProvider({ children }) {
   }, [supabase]);
 
   // Update password during recovery or while authenticated
-  const updateUserPassword = useCallback(async (newPassword) => {
+  const updateUserPassword = useCallback(async (newPassword, options = {}) => {
+    const { signOutAfter = false, keepRecoveryView = false } = options;
     const cleanPassword = (newPassword || '').trim();
     if (!cleanPassword || cleanPassword.length < 6) {
       return { success: false, error: 'New password must be at least 6 characters long.' };
@@ -348,6 +354,20 @@ export function AuthProvider({ children }) {
 
       if (error) {
         return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      if (signOutAfter) {
+        keepRecoveryOnSignOutRef.current = Boolean(keepRecoveryView);
+        try {
+          await supabase.auth.signOut();
+        } catch {}
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        if (!keepRecoveryView) {
+          setIsRecoveryMode(false);
+        }
+        return { success: true, signedOut: true };
       }
 
       setIsRecoveryMode(false);

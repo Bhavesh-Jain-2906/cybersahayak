@@ -178,12 +178,13 @@ export default function AuthScreen() {
     };
   }, []);
 
-  // Read OAuth / callback query or hash errors and ?mode=forgot cleanly
+  // Read OAuth / callback query or hash errors, ?mode=forgot, and ?reset=success cleanly
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const urlMode = params.get('mode');
+    const resetStatus = params.get('reset');
     const authError =
       params.get('auth_error') ||
       params.get('error_description') ||
@@ -192,6 +193,10 @@ export default function AuthScreen() {
 
     if (urlMode === 'forgot') {
       setMode('forgot');
+    }
+    if (resetStatus === 'success') {
+      setMode('login');
+      setSuccessNotice('Password changed! Sign in below with your email and new password.');
     }
     if (authError) {
       const normalized = authError.toLowerCase();
@@ -202,7 +207,7 @@ export default function AuthScreen() {
       );
     }
 
-    if (urlMode || params.get('auth_error') || params.get('error_description') || hashParams.get('error')) {
+    if (urlMode || resetStatus || params.get('auth_error') || params.get('error_description') || hashParams.get('error')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);

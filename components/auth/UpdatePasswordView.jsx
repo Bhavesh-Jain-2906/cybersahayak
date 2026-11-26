@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ShieldCheck,
@@ -12,6 +13,7 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowLeft,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/lib/constants';
@@ -19,19 +21,25 @@ import styles from './AuthScreen.module.css';
 
 export default function UpdatePasswordView() {
   const router = useRouter();
-  const { user, loading, updateUserPassword, clearRecoveryMode } = useAuth();
+  const { user, loading, updateUserPassword, clearRecoveryMode, signOut } = useAuth();
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [passwordChanged, setPasswordChanged] = useState(false);
+  const [accountEmail, setAccountEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (user?.email) {
+      setAccountEmail(user.email);
+    }
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
-    setSuccessMessage('');
 
     const cleanPassword = newPassword.trim();
     const cleanConfirm = confirmPassword.trim();
@@ -51,17 +59,19 @@ export default function UpdatePasswordView() {
 
     setSubmitting(true);
     try {
-      const result = await updateUserPassword(cleanPassword);
+      const result = await updateUserPassword(cleanPassword, {
+        signOutAfter: true,
+        keepRecoveryView: true,
+      });
+
       if (!result.success) {
         setErrorMessage(result.error || 'Failed to update password.');
         return;
       }
 
-      setSuccessMessage('Password updated successfully! Opening Connor...');
-      setTimeout(() => {
-        clearRecoveryMode();
-        router.replace('/');
-      }, 900);
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordChanged(true);
     } catch (err) {
       setErrorMessage(err?.message || 'Unexpected error while updating password.');
     } finally {
@@ -74,7 +84,8 @@ export default function UpdatePasswordView() {
     router.replace('/?mode=forgot');
   };
 
-  const handleContinueHome = () => {
+  const handleCancelToLogin = async () => {
+    await signOut();
     clearRecoveryMode();
     router.replace('/');
   };
@@ -104,46 +115,85 @@ export default function UpdatePasswordView() {
             </span>
           </div>
 
-          <h1 className="text-xl font-semibold text-white tracking-[-0.02em]">
-            Set a new password
-          </h1>
-          <p className="text-xs text-[#A1A1AA] mt-1 mb-5">
-            {user?.email
-              ? `Create a strong new password for ${user.email}.`
-              : 'Verify your reset link to choose a new password.'}
-          </p>
-
-          {loading ? (
-            <div className="py-8 flex flex-col items-center justify-center gap-3 text-xs text-[#D8B4FE]">
-              <Loader2 className="w-5 h-5 animate-spin text-[#C084FC]" />
-              <span>Verifying recovery session...</span>
-            </div>
-          ) : !user ? (
+          {passwordChanged ? (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-[8px] bg-red-500/15 border border-red-500/35 text-red-200 text-xs flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <span>
-                  This password reset link is invalid, expired, or was opened in a different browser.
-                  Please request a fresh reset link.
-                </span>
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-white tracking-[-0.02em]">
+                    Password changed
+                  </h1>
+                  <p className="text-xs text-emerald-300/90 mt-0.5">
+                    Your account password has been updated.
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={handleBackToForgot}
-                className="w-full flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs transition-colors"
+
+              <div className="p-3.5 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed">
+                {accountEmail
+                  ? `Password changed for ${accountEmail}. Please go back to the Connor website to sign in with your email and new password.`
+                  : 'Password changed successfully. Please go back to the Connor website to sign in with your email and new password.'}
+              </div>
+
+              <Link
+                href="/?reset=success"
+                onClick={() => clearRecoveryMode()}
+                className="w-full flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs sm:text-[13px] transition-colors"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Request a New Reset Link</span>
-              </button>
+                <span>Click here to Login</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
+          ) : loading ? (
+            <>
+              <h1 className="text-xl font-semibold text-white tracking-[-0.02em]">
+                Set a new password
+              </h1>
+              <p className="text-xs text-[#A1A1AA] mt-1 mb-5">
+                Verify your reset link to choose a new password.
+              </p>
+              <div className="py-8 flex flex-col items-center justify-center gap-3 text-xs text-[#D8B4FE]">
+                <Loader2 className="w-5 h-5 animate-spin text-[#C084FC]" />
+                <span>Verifying recovery session...</span>
+              </div>
+            </>
+          ) : !user ? (
+            <>
+              <h1 className="text-xl font-semibold text-white tracking-[-0.02em]">
+                Reset link unavailable
+              </h1>
+              <p className="text-xs text-[#A1A1AA] mt-1 mb-5">
+                We could not verify an active recovery session for this link.
+              </p>
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-[8px] bg-red-500/15 border border-red-500/35 text-red-200 text-xs flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span>
+                    This password reset link is invalid or has expired. Please request a fresh reset link.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleBackToForgot}
+                  className="w-full flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Request a New Reset Link</span>
+                </button>
+              </div>
+            </>
           ) : (
             <>
-              {successMessage && (
-                <div className="mb-4 p-3 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>{successMessage}</span>
-                </div>
-              )}
+              <h1 className="text-xl font-semibold text-white tracking-[-0.02em]">
+                Set a new password
+              </h1>
+              <p className="text-xs text-[#A1A1AA] mt-1 mb-5">
+                {user?.email
+                  ? `Create a strong new password for ${user.email}.`
+                  : 'Create a strong new password for your account.'}
+              </p>
 
               {errorMessage && (
                 <div className="mb-4 p-3 rounded-[8px] bg-red-500/15 border border-red-500/35 text-red-200 text-xs flex items-start gap-2.5">
@@ -229,7 +279,7 @@ export default function UpdatePasswordView() {
 
                 <button
                   type="submit"
-                  disabled={submitting || Boolean(successMessage)}
+                  disabled={submitting}
                   className="w-full flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs transition-colors disabled:opacity-50"
                 >
                   {submitting ? (
@@ -246,10 +296,10 @@ export default function UpdatePasswordView() {
               <div className="mt-4 text-center">
                 <button
                   type="button"
-                  onClick={handleContinueHome}
+                  onClick={handleCancelToLogin}
                   className="text-xs text-[#A1A1AA] hover:text-[#D8B4FE] transition-colors"
                 >
-                  Skip for now and go to workspace
+                  Back to Login
                 </button>
               </div>
             </>
