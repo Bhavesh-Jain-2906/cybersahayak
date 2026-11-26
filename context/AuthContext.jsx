@@ -394,6 +394,59 @@ export function AuthProvider({ children }) {
     }
   }, [supabase]);
 
+  // Verify an emailed token_hash safely (immune to email-scanner GET prefetching & cross-browser PKCE errors)
+  const verifyEmailTokenHash = useCallback(async ({ tokenHash, type }) => {
+    const cleanToken = (tokenHash || '').trim();
+    const cleanType = (type || 'signup').trim().toLowerCase();
+
+    if (!cleanToken) {
+      return { success: false, error: 'Verification token is missing.' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: cleanToken,
+        type: cleanType,
+      });
+
+      if (error || !data?.user) {
+        return {
+          success: false,
+          error: formatSupabaseAuthError(
+            error?.message || 'This email link is invalid or has expired. Please request a fresh link.'
+          ),
+        };
+      }
+
+      if (cleanType === 'recovery') {
+        setIsRecoveryMode(true);
+      } else {
+        setIsRecoveryMode(false);
+      }
+
+      setUser(data.user);
+      if (data.session) {
+        setSession(data.session);
+      }
+
+      try {
+        await supabase.from('profiles').upsert(
+          {
+            id: data.user.id,
+            name: resolveDisplayName(data.user),
+            email: data.user.email,
+          },
+          { onConflict: 'id' }
+        );
+      } catch {}
+
+      refreshProfile(data.user.id, data.user);
+      return { success: true, user: data.user, session: data.session };
+    } catch (err) {
+      return { success: false, error: err?.message || 'Unable to verify email link.' };
+    }
+  }, [supabase, refreshProfile]);
+
   const clearRecoveryMode = useCallback(() => {
     setIsRecoveryMode(false);
   }, []);
@@ -442,6 +495,7 @@ export function AuthProvider({ children }) {
         signUpWithPassword,
         resendVerificationEmail,
         sendPasswordResetEmail,
+        verifyEmailTokenHash,
         updateUserPassword,
         clearRecoveryMode,
         signOut,

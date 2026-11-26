@@ -49,8 +49,13 @@ export async function GET(request) {
   const nextPath = getSafeNextPath(searchParams.get('next'));
 
   const oauthError = searchParams.get('error_description') || searchParams.get('error');
+  const errorCode = searchParams.get('error_code');
   if (oauthError) {
-    return NextResponse.redirect(`${origin}/?auth_error=${encodeURIComponent(oauthError)}`);
+    const friendlyError =
+      errorCode === 'otp_expired' || oauthError.toLowerCase().includes('invalid or has expired')
+        ? 'This email link is invalid or already used (some email apps pre-scan links). Please request a fresh link.'
+        : oauthError;
+    return NextResponse.redirect(`${origin}/?auth_error=${encodeURIComponent(friendlyError)}`);
   }
 
   const code = searchParams.get('code');

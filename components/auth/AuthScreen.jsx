@@ -180,21 +180,31 @@ export default function AuthScreen() {
     };
   }, []);
 
-  // Read OAuth / callback query errors or ?mode=forgot cleanly
+  // Read OAuth / callback query or hash errors and ?mode=forgot cleanly
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const urlMode = params.get('mode');
-    const authError = params.get('auth_error');
+    const authError =
+      params.get('auth_error') ||
+      params.get('error_description') ||
+      hashParams.get('error_description') ||
+      hashParams.get('error');
 
     if (urlMode === 'forgot') {
       setMode('forgot');
     }
     if (authError) {
-      setErrorMessage(authError);
+      const normalized = authError.toLowerCase();
+      setErrorMessage(
+        normalized.includes('invalid or has expired')
+          ? 'This email link is invalid or was already used (some email apps pre-scan links). Please request a fresh link.'
+          : authError
+      );
     }
 
-    if (urlMode || authError) {
+    if (urlMode || params.get('auth_error') || params.get('error_description') || hashParams.get('error')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
