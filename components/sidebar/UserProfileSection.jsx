@@ -12,7 +12,11 @@ export default function UserProfileSection() {
 
   const displayName = isAdmin
     ? 'System Administrator'
-    : profile?.name || user?.user_metadata?.name || profileSettings?.displayName || 'Digital Citizen';
+    : profile?.name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      profileSettings?.displayName ||
+      'Digital Citizen';
   const displayEmail = user?.email || (profileSettings?.primaryBank ? `${profileSettings.primaryBank} User` : 'Protected Session');
 
   return (

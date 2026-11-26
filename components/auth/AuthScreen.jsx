@@ -12,6 +12,8 @@ import {
   AlertCircle,
   CheckCircle2,
   KeyRound,
+  ArrowLeft,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/lib/constants';
@@ -23,10 +25,42 @@ const NOIR_PURPLE_PARTICLES = [
   { bg: '#A855F7', glow: 'rgba(147, 51, 234, 0.45)' }, // vibrant purple
 ];
 
-export default function AuthScreen() {
-  const { signInWithPassword, signUpWithPassword } = useAuth();
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const GMAIL_REGEX = /^[^\s@]+@(gmail|googlemail)\.com$/i;
 
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+function GoogleLogo() {
+  return (
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"
+      />
+    </svg>
+  );
+}
+
+export default function AuthScreen() {
+  const {
+    signInWithPassword,
+    signInWithGoogle,
+    signUpWithPassword,
+    resendVerificationEmail,
+    sendPasswordResetEmail,
+  } = useAuth();
+
+  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +68,10 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
+  const [resetCooldown, setResetCooldown] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
 
@@ -166,6 +204,32 @@ export default function AuthScreen() {
     };
   }, []);
 
+  // Read OAuth / callback query errors or ?mode=forgot cleanly
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const urlMode = params.get('mode');
+    const authError = params.get('auth_error');
+
+    if (urlMode === 'forgot') {
+      setMode('forgot');
+    }
+    if (authError) {
+      setErrorMessage(authError);
+    }
+
+    if (urlMode || authError) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  // Cooldown timer for resending password-reset links
+  useEffect(() => {
+    if (resetCooldown <= 0) return undefined;
+    const timer = setTimeout(() => setResetCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resetCooldown]);
+
   // Auto-clear error when user modifies any input
   const handleInputChange = (setter) => (e) => {
     setter(e.target.value);
@@ -174,11 +238,53 @@ export default function AuthScreen() {
     }
   };
 
-  // Switch between login and registration cleanly
+  // Switch between login, registration, and forgot-password cleanly
   const switchMode = (targetMode) => {
     setMode(targetMode);
     setErrorMessage('');
     setSuccessNotice('');
+    setPendingVerificationEmail('');
+  };
+
+  // Launch Google OAuth ("Continue with Google")
+  const handleGoogleSignIn = async () => {
+    setErrorMessage('');
+    setSuccessNotice('');
+    setPendingVerificationEmail('');
+    setGoogleSubmitting(true);
+
+    try {
+      const result = await signInWithGoogle();
+      if (!result.success) {
+        setErrorMessage(result.error || 'Could not launch Google Sign-In.');
+        setGoogleSubmitting(false);
+      }
+      // On success, Supabase redirects to Google OAuth consent screen
+    } catch (err) {
+      setErrorMessage(err?.message || 'Unable to start Google Sign-In.');
+      setGoogleSubmitting(false);
+    }
+  };
+
+  // Resend Gmail confirmation email
+  const handleResendVerification = async () => {
+    const targetEmail = (pendingVerificationEmail || email).trim().toLowerCase();
+    if (!targetEmail) return;
+    setResendingEmail(true);
+    setErrorMessage('');
+
+    try {
+      const result = await resendVerificationEmail(targetEmail);
+      if (!result.success) {
+        setErrorMessage(result.error || 'Could not resend verification email.');
+      } else {
+        setSuccessNotice(result.message);
+      }
+    } catch (err) {
+      setErrorMessage(err?.message || 'Failed to resend verification email.');
+    } finally {
+      setResendingEmail(false);
+    }
   };
 
   // Validate and submit form
@@ -186,9 +292,37 @@ export default function AuthScreen() {
     e.preventDefault();
     setErrorMessage('');
     setSuccessNotice('');
+    setPendingVerificationEmail('');
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
+
+    if (mode === 'forgot') {
+      if (!cleanEmail) {
+        setErrorMessage('Please enter your registered Gmail address.');
+        return;
+      }
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setErrorMessage('Please enter a valid Gmail address (e.g. name@gmail.com).');
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        const result = await sendPasswordResetEmail(cleanEmail);
+        if (!result.success) {
+          setErrorMessage(result.error || 'Could not send reset link.');
+        } else {
+          setSuccessNotice(result.message);
+          setResetCooldown(30);
+        }
+      } catch (err) {
+        setErrorMessage(err?.message || 'Unexpected error sending reset email.');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
     {
       if (mode === 'register') {
         const cleanName = name.trim();
@@ -203,13 +337,19 @@ export default function AuthScreen() {
       }
 
       if (!cleanEmail) {
-        setErrorMessage('Please enter your email address.');
+        setErrorMessage('Please enter your Gmail address.');
         return;
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(cleanEmail)) {
-        setErrorMessage('Please enter a valid email address (e.g. user@example.com).');
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setErrorMessage('Please enter a valid Gmail address (e.g. name@gmail.com).');
+        return;
+      }
+
+      if (mode === 'register' && !GMAIL_REGEX.test(cleanEmail)) {
+        setErrorMessage(
+          'Please register with a valid @gmail.com address, or click Continue with Google.'
+        );
         return;
       }
 
@@ -242,6 +382,9 @@ export default function AuthScreen() {
 
         if (!result.success) {
           setErrorMessage(result.error || 'Failed to sign in. Please verify your credentials.');
+          if (result.needsEmailConfirmation && result.email) {
+            setPendingVerificationEmail(result.email);
+          }
         }
       } else {
         const result = await signUpWithPassword({
@@ -252,6 +395,12 @@ export default function AuthScreen() {
 
         if (!result.success) {
           setErrorMessage(result.error || 'Failed to create account.');
+        } else if (result.requiresEmailVerification) {
+          setSuccessNotice(result.message);
+          setPendingVerificationEmail(cleanEmail);
+          setPassword('');
+          setConfirmPassword('');
+          setMode('login');
         } else if (result.message) {
           setSuccessNotice(result.message);
           setMode('login');
@@ -363,47 +512,110 @@ export default function AuthScreen() {
               />
               {/* Editorial Header Microcopy */}
               <div className="relative mb-5">
+                {mode === 'forgot' && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] mb-3 transition-colors focus:outline-none"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Sign In</span>
+                  </button>
+                )}
                 <h2 className="text-lg sm:text-xl font-semibold text-white tracking-[-0.02em]">
-                  {mode === 'login' ? 'Welcome back' : 'Create your safe space'}
+                  {mode === 'login'
+                    ? 'Welcome back'
+                    : mode === 'register'
+                      ? 'Create your safe space'
+                      : 'Reset your password'}
                 </h2>
                 <p className="text-xs text-[#A1A1AA] mt-1">
                   {mode === 'login'
-                    ? 'Pick up right where you left off in your private cyber guidance hub.'
-                    : 'Set up an isolated account to save guidance threads and checkup progress.'}
+                    ? 'Sign in with Google or your verified Gmail account.'
+                    : mode === 'register'
+                      ? 'Register with Google or a real @gmail.com address.'
+                      : 'Enter your registered Gmail address to receive a secure password reset link.'}
                 </p>
               </div>
 
-              {/* Segmented Tab Switcher (Translucent Dark Recess + Subtle Plum Active Tab) */}
-              <div className="relative grid grid-cols-2 p-1 rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.08] mb-5">
-                <button
-                  type="button"
-                  onClick={() => switchMode('login')}
-                  className={`py-2 text-xs rounded-[6px] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 ${
-                    mode === 'login'
-                      ? 'bg-[#261E35]/75 text-white font-semibold border border-[#A855F7]/30'
-                      : 'text-[#A1A1AA] hover:text-white font-medium border border-transparent'
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMode('register')}
-                  className={`py-2 text-xs rounded-[6px] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 ${
-                    mode === 'register'
-                      ? 'bg-[#261E35]/75 text-white font-semibold border border-[#A855F7]/30'
-                      : 'text-[#A1A1AA] hover:text-white font-medium border border-transparent'
-                  }`}
-                >
-                  Create Account
-                </button>
-              </div>
+              {/* Segmented Tab Switcher (Sign In / Create Account) */}
+              {mode !== 'forgot' && (
+                <div className="relative grid grid-cols-2 p-1 rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.08] mb-4">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className={`py-2 text-xs rounded-[6px] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 ${
+                      mode === 'login'
+                        ? 'bg-[#261E35]/75 text-white font-semibold border border-[#A855F7]/30'
+                        : 'text-[#A1A1AA] hover:text-white font-medium border border-transparent'
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode('register')}
+                    className={`py-2 text-xs rounded-[6px] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 ${
+                      mode === 'register'
+                        ? 'bg-[#261E35]/75 text-white font-semibold border border-[#A855F7]/30'
+                        : 'text-[#A1A1AA] hover:text-white font-medium border border-transparent'
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                </div>
+              )}
+
+              {/* Google OAuth Button + Divider */}
+              {mode !== 'forgot' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={googleSubmitting || submitting}
+                    className="w-full h-[42px] px-4 rounded-[8px] bg-[#0D0B12]/60 hover:bg-[#1E172E]/80 border border-white/[0.14] hover:border-[#A855F7]/50 text-white font-medium text-xs sm:text-[13px] flex items-center justify-center gap-2.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {googleSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-[#C084FC]" />
+                        <span>Connecting to Google...</span>
+                      </>
+                    ) : (
+                      <>
+                        <GoogleLogo />
+                        <span>Continue with Google</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="relative my-4 flex items-center">
+                    <div className="flex-grow border-t border-white/[0.08]" />
+                    <span className="px-3 text-[10px] uppercase tracking-[0.14em] text-[#71717A] font-medium">
+                      or continue with gmail
+                    </span>
+                    <div className="flex-grow border-t border-white/[0.08]" />
+                  </div>
+                </>
+              )}
 
               {/* Success Banner */}
               {successNotice && (
                 <div className="mb-3.5 p-3 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5 animate-fade-in">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>{successNotice}</span>
+                  <div className="flex-1 space-y-1.5">
+                    <p>{successNotice}</p>
+                    {pendingVerificationEmail && (
+                      <button
+                        type="button"
+                        onClick={handleResendVerification}
+                        disabled={resendingEmail}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-200 hover:text-white underline underline-offset-2 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${resendingEmail ? 'animate-spin' : ''}`} />
+                        <span>{resendingEmail ? 'Resending...' : 'Resend verification email'}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -411,7 +623,20 @@ export default function AuthScreen() {
               {errorMessage && (
                 <div className="mb-3.5 p-3 rounded-[8px] bg-red-500/15 border border-red-500/35 text-red-200 text-xs flex items-start gap-2.5 animate-fade-in">
                   <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span>{errorMessage}</span>
+                  <div className="flex-1 space-y-1.5">
+                    <p>{errorMessage}</p>
+                    {pendingVerificationEmail && (
+                      <button
+                        type="button"
+                        onClick={handleResendVerification}
+                        disabled={resendingEmail}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-red-100 hover:text-white underline underline-offset-2 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${resendingEmail ? 'animate-spin' : ''}`} />
+                        <span>{resendingEmail ? 'Resending...' : 'Resend Gmail verification link'}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -444,68 +669,94 @@ export default function AuthScreen() {
                     htmlFor="auth-email"
                     className="block text-xs font-medium text-white mb-1.5"
                   >
-                    Email Address
+                    {mode === 'login' ? 'Gmail Address' : 'Real Gmail Address'}
                   </label>
                   <div className="relative flex items-center">
                     <Mail className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
                     <input
                       id="auth-email"
                       type="text"
+                      inputMode="email"
                       value={email}
                       onChange={handleInputChange(setEmail)}
-                      placeholder="your.email@example.com"
+                      placeholder="your.name@gmail.com"
                       autoComplete="email"
                       className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label
-                      htmlFor="auth-password"
-                      className="block text-xs font-medium text-white"
-                    >
-                      Password
-                    </label>
-                    {password.length > 0 && (
-                      <span
-                        className={`text-[10px] font-mono ${
-                          password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                        }`}
+                {mode !== 'forgot' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label
+                        htmlFor="auth-password"
+                        className="block text-xs font-medium text-white"
                       >
-                        {password.length >= 6
-                          ? `✓ ${password.length} chars (valid)`
-                          : `${password.length}/6 chars (min 6)`}
-                      </span>
-                    )}
+                        Password
+                      </label>
+                      {mode === 'login' ? (
+                        <button
+                          type="button"
+                          onClick={() => switchMode('forgot')}
+                          className="text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] transition-colors focus:outline-none focus-visible:underline"
+                        >
+                          Forgot password?
+                        </button>
+                      ) : (
+                        password.length > 0 && (
+                          <span
+                            className={`text-[10px] font-mono ${
+                              password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                            }`}
+                          >
+                            {password.length >= 6
+                              ? `✓ ${password.length} chars (valid)`
+                              : `${password.length}/6 chars (min 6)`}
+                          </span>
+                        )
+                      )}
+                    </div>
+                    <div className="relative flex items-center">
+                      <Lock className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                      <input
+                        id="auth-password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={handleInputChange(setPassword)}
+                        placeholder={mode === 'register' ? 'Minimum 6 characters' : 'Enter your password'}
+                        autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                        className="w-full pl-10 pr-10 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 text-[#A1A1AA] hover:text-[#D8B4FE] transition-colors p-1 focus:outline-none focus-visible:text-[#D8B4FE]"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-1.5">
+                      <p className="text-[11px] text-[#71717A]">
+                        {mode === 'login'
+                          ? 'Encrypted Supabase session • Never share OTPs or PINs.'
+                          : 'Use a strong, unique password with at least 6 characters.'}
+                      </p>
+                      {mode === 'login' &&
+                        password.length > 0 &&
+                        email.trim().toLowerCase() !== 'admin' && (
+                          <span
+                            className={`text-[10px] font-mono shrink-0 ${
+                              password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                            }`}
+                          >
+                            {password.length >= 6 ? '✓ valid' : `${password.length}/6`}
+                          </span>
+                        )}
+                    </div>
                   </div>
-                  <div className="relative flex items-center">
-                    <Lock className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
-                    <input
-                      id="auth-password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={handleInputChange(setPassword)}
-                      placeholder={mode === 'register' ? 'Minimum 6 characters' : 'Enter your password'}
-                      autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                      className="w-full pl-10 pr-10 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
-                    />
-                    <button
-                      type="button"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 text-[#A1A1AA] hover:text-[#D8B4FE] transition-colors p-1 focus:outline-none focus-visible:text-[#D8B4FE]"
-                    >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-[#71717A] mt-1.5">
-                    {mode === 'login'
-                      ? 'Encrypted Supabase session • Never share banking OTPs or PINs.'
-                      : 'Use a strong, unique password with at least 6 characters.'}
-                  </p>
-                </div>
+                )}
 
                 {mode === 'register' && (
                   <div>
@@ -543,14 +794,28 @@ export default function AuthScreen() {
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || googleSubmitting || (mode === 'forgot' && resetCooldown > 0)}
                   className="w-full mt-2 flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs sm:text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-[#09090B]" />
-                      <span>{mode === 'login' ? 'Verifying Session...' : 'Setting Up Workspace...'}</span>
+                      <span>
+                        {mode === 'login'
+                          ? 'Verifying Session...'
+                          : mode === 'register'
+                            ? 'Setting Up Workspace...'
+                            : 'Sending Reset Link...'}
+                      </span>
                     </>
+                  ) : mode === 'forgot' ? (
+                    <span>
+                      {resetCooldown > 0
+                        ? `Resend Link in ${resetCooldown}s`
+                        : successNotice
+                          ? 'Resend Reset Link'
+                          : 'Send Password Reset Link'}
+                    </span>
                   ) : (
                     <span>{mode === 'login' ? 'Continue to Workspace' : 'Create Protected Account'}</span>
                   )}
@@ -559,27 +824,40 @@ export default function AuthScreen() {
 
               {/* Clean Monochrome Switch Link with Subtle Purple Accent */}
               <div className="mt-4 text-center">
-                <button
-                  type="button"
-                  onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
-                  className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
-                >
-                  {mode === 'login' ? (
-                    <>
-                      New here?{' '}
-                      <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
-                        Create an account
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      Already have an account?{' '}
-                      <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
-                        Sign in instead
-                      </span>
-                    </>
-                  )}
-                </button>
+                {mode === 'forgot' ? (
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
+                  >
+                    Remembered your password?{' '}
+                    <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                      Back to Sign In
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+                    className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
+                  >
+                    {mode === 'login' ? (
+                      <>
+                        New here?{' '}
+                        <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                          Create an account
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        Already have an account?{' '}
+                        <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                          Sign in instead
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Privacy & RLS Assurance */}

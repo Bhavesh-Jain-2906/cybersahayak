@@ -11,13 +11,14 @@ import ResourcesView from '@/components/resources/ResourcesView';
 import AdminConsoleView from '@/components/admin/AdminConsoleView';
 import SettingsModal from '@/components/modals/SettingsModal';
 import AuthScreen from '@/components/auth/AuthScreen';
+import UpdatePasswordView from '@/components/auth/UpdatePasswordView';
 import BlackHoleBackground from '@/components/chat/BlackHoleBackground';
 import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function HomePage() {
   const { activeView } = useChat();
-  const { user, loading } = useAuth();
+  const { user, loading, isRecoveryMode } = useAuth();
 
   // Loading state while checking auth session (with fallback styles)
   if (loading) {
@@ -35,6 +36,11 @@ export default function HomePage() {
         </div>
       </div>
     );
+  }
+
+  // If in Supabase password-recovery flow, display Update Password view
+  if (isRecoveryMode) {
+    return <UpdatePasswordView />;
   }
 
   // If not authenticated, require login/registration

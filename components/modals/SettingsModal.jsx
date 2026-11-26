@@ -56,7 +56,11 @@ export default function SettingsModal() {
 
   // Form local state
   const [displayName, setDisplayName] = useState(
-    profile?.name || user?.user_metadata?.name || profileSettings.displayName || 'Digital Citizen'
+    profile?.name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      profileSettings.displayName ||
+      'Digital Citizen'
   );
   const [primaryBank, setPrimaryBank] = useState(profileSettings.primaryBank || 'State Bank of India (SBI)');
   const [emergencyContact, setEmergencyContact] = useState(profileSettings.emergencyContact || '');
@@ -64,8 +68,9 @@ export default function SettingsModal() {
   const [languagePreference, setLanguagePreference] = useState(profileSettings.languagePreference || 'english');
 
   useEffect(() => {
-    if (profile?.name || user?.user_metadata?.name) {
-      setDisplayName(profile?.name || user?.user_metadata?.name);
+    const resolvedName = profile?.name || user?.user_metadata?.full_name || user?.user_metadata?.name;
+    if (resolvedName) {
+      setDisplayName(resolvedName);
     }
   }, [profile, user]);
 

@@ -6,12 +6,36 @@ import { getUserProfile, updateUserProfile } from '@/lib/supabase/db';
 
 const AuthContext = createContext(null);
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const GMAIL_REGEX = /^[^\s@]+@(gmail|googlemail)\.com$/i;
+
+function resolveDisplayName(authUser) {
+  return (
+    authUser?.user_metadata?.full_name ||
+    authUser?.user_metadata?.name ||
+    (authUser?.email ? authUser.email.split('@')[0] : '') ||
+    'Digital Citizen'
+  );
+}
+
+function formatSupabaseAuthError(rawMessage) {
+  const msg = rawMessage || 'Authentication request failed.';
+  if (msg.includes('Email address') && msg.includes('not authorized')) {
+    return 'Supabase default email sender restricts external addresses. Configure Custom SMTP (Gmail/Resend) in Supabase Auth Settings to deliver emails to any Gmail inbox.';
+  }
+  if (msg.toLowerCase().includes('rate limit') || msg.includes('over_email_send_rate_limit') || msg.includes('security purposes')) {
+    return 'Too many email requests in a short window. Please wait a minute before trying again.';
+  }
+  return msg;
+}
+
 export function AuthProvider({ children }) {
   const [supabase] = useState(() => createClient());
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   // Determine if the active user holds Administrator privileges
   const isAdmin = useMemo(() => {
@@ -21,8 +45,8 @@ export function AuthProvider({ children }) {
     );
   }, [user]);
 
-  // Fetch user profile from database in background
-  const refreshProfile = useCallback(async (userId) => {
+  // Fetch user profile from database in background (and ensure OAuth/verified users have a profile row)
+  const refreshProfile = useCallback(async (userId, authUser = null) => {
     if (!userId || !supabase) {
       setProfile(null);
       return;
@@ -31,6 +55,27 @@ export function AuthProvider({ children }) {
       const data = await getUserProfile(supabase, userId);
       if (data) {
         setProfile(data);
+        return;
+      }
+
+      if (authUser?.email) {
+        const fallbackName = resolveDisplayName(authUser);
+        const { data: upserted } = await supabase
+          .from('profiles')
+          .upsert(
+            {
+              id: userId,
+              name: fallbackName,
+              email: authUser.email,
+            },
+            { onConflict: 'id' }
+          )
+          .select()
+          .single();
+
+        if (upserted) {
+          setProfile(upserted);
+        }
       }
     } catch (err) {
       console.warn('[Auth] Error fetching profile:', err);
@@ -62,7 +107,7 @@ export function AuthProvider({ children }) {
           clearTimeout(safetyTimer);
 
           if (initialSession?.user) {
-            refreshProfile(initialSession.user.id);
+            refreshProfile(initialSession.user.id, initialSession.user);
           }
         }
       } catch (err) {
@@ -75,7 +120,7 @@ export function AuthProvider({ children }) {
 
     initializeAuth();
 
-    // Listen to auth events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.)
+    // Listen to auth events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, PASSWORD_RECOVERY, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!mounted) return;
       setSession(currentSession);
@@ -83,8 +128,14 @@ export function AuthProvider({ children }) {
       setUser(currentUser);
       setLoading(false);
 
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveryMode(true);
+      } else if (event === 'SIGNED_OUT') {
+        setIsRecoveryMode(false);
+      }
+
       if (currentUser) {
-        refreshProfile(currentUser.id);
+        refreshProfile(currentUser.id, currentUser);
       } else {
         setProfile(null);
       }
@@ -106,9 +157,8 @@ export function AuthProvider({ children }) {
       if (!cleanEmail) {
         return { success: false, error: 'Email address is required.' };
       }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(cleanEmail)) {
-        return { success: false, error: 'Please enter a valid email address (e.g. user@example.com).' };
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        return { success: false, error: 'Please enter a valid Gmail address (e.g. name@gmail.com).' };
       }
       if (!cleanPassword) {
         return { success: false, error: 'Password is required.' };
@@ -126,18 +176,20 @@ export function AuthProvider({ children }) {
 
       if (error) {
         let msg = error.message;
+        const needsEmailConfirmation = msg.includes('Email not confirmed');
         if (msg.includes('Invalid login credentials')) {
-          msg = 'Invalid credentials. Please verify your email/username and password.';
-        } else if (msg.includes('Email not confirmed')) {
-          msg = 'Email address has not been confirmed. Please check your inbox or disable email confirmation in Supabase.';
+          msg = 'Invalid credentials. Please verify your Gmail and password.';
+        } else if (needsEmailConfirmation) {
+          msg = 'Your Gmail address is not verified yet. Please click the verification link in your inbox or resend it below.';
         }
-        return { success: false, error: msg };
+        return { success: false, error: msg, needsEmailConfirmation, email: cleanEmail };
       }
 
+      setIsRecoveryMode(false);
       setUser(data.user);
       setSession(data.session);
       if (data.user) {
-        refreshProfile(data.user.id);
+        refreshProfile(data.user.id, data.user);
       }
       return { success: true, user: data.user, session: data.session };
     } catch (err) {
@@ -145,7 +197,62 @@ export function AuthProvider({ children }) {
     }
   }, [supabase, refreshProfile]);
 
-  // Sign Up with email and password
+  // Sign In / Sign Up via real Google (Gmail) OAuth
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      // Preflight provider check so users aren't stranded on a raw GoTrue error JSON page
+      if (supabaseUrl && supabaseAnonKey) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
+          const settingsRes = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+            headers: { apikey: supabaseAnonKey },
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (settingsRes.ok) {
+            const settings = await settingsRes.json();
+            if (settings?.external?.google === false) {
+              return {
+                success: false,
+                providerNotEnabled: true,
+                error:
+                  'Google Sign-In is not enabled in Supabase yet. Enable Google under Authentication → Providers in your Supabase Dashboard, or sign in with your Gmail & password below.',
+              };
+            }
+          }
+        } catch {
+          // If preflight check fails due to transient network error, let signInWithOAuth proceed normally
+        }
+      }
+
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
+        },
+      });
+
+      if (error) {
+        return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message || 'Unable to launch Google Sign-In.' };
+    }
+  }, [supabase]);
+
+  // Sign Up with real Gmail and password
   const signUpWithPassword = useCallback(async ({ name, email, password }) => {
     const cleanName = (name || '').trim();
     const cleanEmail = (email || '').trim().toLowerCase();
@@ -155,11 +262,16 @@ export function AuthProvider({ children }) {
       return { success: false, error: 'Full name is required.' };
     }
     if (!cleanEmail) {
-      return { success: false, error: 'Email address is required.' };
+      return { success: false, error: 'Gmail address is required.' };
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      return { success: false, error: 'Please enter a valid email address.' };
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid Gmail address.' };
+    }
+    if (!GMAIL_REGEX.test(cleanEmail)) {
+      return {
+        success: false,
+        error: 'Please register with a valid @gmail.com address, or click Continue with Google.',
+      };
     }
     if (!cleanPassword) {
       return { success: false, error: 'Password is required.' };
@@ -169,10 +281,12 @@ export function AuthProvider({ children }) {
     }
 
     try {
+      const emailRedirectTo = `${window.location.origin}/auth/callback`;
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password: cleanPassword,
         options: {
+          emailRedirectTo,
           data: {
             name: cleanName,
             role: 'user',
@@ -181,7 +295,15 @@ export function AuthProvider({ children }) {
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      // When email confirmation is enabled, Supabase returns an empty identities array for duplicate signups
+      if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        return {
+          success: false,
+          error: 'An account with this Gmail already exists. Try signing in or using Forgot Password.',
+        };
       }
 
       if (data.session) {
@@ -194,19 +316,110 @@ export function AuthProvider({ children }) {
             email: cleanEmail,
           });
         } catch {}
-        refreshProfile(data.user.id);
+        refreshProfile(data.user.id, data.user);
         return { success: true, user: data.user, session: data.session };
       }
 
       return {
         success: true,
+        requiresEmailVerification: true,
+        email: cleanEmail,
         user: data.user,
-        message: 'Account created successfully! You can now sign in.',
+        message: `Verification link sent to ${cleanEmail}. Check your Gmail inbox to activate your account, then sign in.`,
       };
     } catch (err) {
       return { success: false, error: err.message || 'An unexpected error occurred during sign up.' };
     }
   }, [supabase, refreshProfile]);
+
+  // Resend Gmail signup confirmation link
+  const resendVerificationEmail = useCallback(async (email) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid Gmail address first.' };
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      return {
+        success: true,
+        message: `Verification link resent to ${cleanEmail}. Please check your Gmail inbox (and Spam/Promotions).`,
+      };
+    } catch (err) {
+      return { success: false, error: err.message || 'Failed to resend verification email.' };
+    }
+  }, [supabase]);
+
+  // Send password reset email via Supabase PKCE recovery flow
+  const sendPasswordResetEmail = useCallback(async (email) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    if (!cleanEmail) {
+      return { success: false, error: 'Please enter your registered Gmail address.' };
+    }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid Gmail address (e.g. name@gmail.com).' };
+    }
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/update-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo,
+      });
+
+      if (error) {
+        return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      return {
+        success: true,
+        message: `Password reset link sent to ${cleanEmail}. Open the link in your Gmail inbox (in this same browser) to set a new password.`,
+      };
+    } catch (err) {
+      return { success: false, error: err.message || 'Failed to send password reset email.' };
+    }
+  }, [supabase]);
+
+  // Update password during recovery or while authenticated
+  const updateUserPassword = useCallback(async (newPassword) => {
+    const cleanPassword = (newPassword || '').trim();
+    if (!cleanPassword || cleanPassword.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters long.' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: cleanPassword,
+      });
+
+      if (error) {
+        return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      setIsRecoveryMode(false);
+      if (data?.user) {
+        setUser(data.user);
+      }
+      return { success: true, user: data?.user };
+    } catch (err) {
+      return { success: false, error: err.message || 'Unable to update password.' };
+    }
+  }, [supabase]);
+
+  const clearRecoveryMode = useCallback(() => {
+    setIsRecoveryMode(false);
+  }, []);
 
   // Sign Out
   const signOut = useCallback(async () => {
@@ -215,6 +428,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn('[Auth] SignOut error:', err);
     } finally {
+      setIsRecoveryMode(false);
       setUser(null);
       setProfile(null);
       setSession(null);
@@ -245,8 +459,14 @@ export function AuthProvider({ children }) {
         session,
         loading,
         isAdmin,
+        isRecoveryMode,
         signInWithPassword,
+        signInWithGoogle,
         signUpWithPassword,
+        resendVerificationEmail,
+        sendPasswordResetEmail,
+        updateUserPassword,
+        clearRecoveryMode,
         signOut,
         updateName,
         refreshProfile,
