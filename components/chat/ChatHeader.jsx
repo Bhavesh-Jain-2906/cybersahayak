@@ -16,7 +16,7 @@ export default function ChatHeader() {
   } = useChat();
 
   return (
-    <header className="relative h-14 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#06050B]/35 backdrop-blur-md px-3 md:px-5 flex items-center justify-between gap-3 shrink-0 z-10 dark:shadow-none">
+    <header className="relative h-14 border-b border-slate-200/70 dark:border-white/10 bg-white/45 dark:bg-[#06050B]/35 backdrop-blur-md px-3 md:px-5 flex items-center justify-between gap-3 shrink-0 z-10 dark:shadow-none">
       <div className="flex items-center gap-2.5 min-w-0">
         {/* Mobile Sidebar Hamburger Toggle */}
         <button
@@ -44,7 +44,7 @@ export default function ChatHeader() {
           <h2 className="text-sm font-semibold text-slate-800 dark:text-purple-50 truncate">
             {activeConversation ? activeConversation.title : 'New Cybercrime Guidance Chat'}
           </h2>
-          <p className="text-[11px] text-slate-400 dark:text-purple-200/55 hidden sm:block truncate">
+          <p className="text-[11px] text-slate-500 dark:text-purple-200/55 hidden sm:block truncate">
             Confidential & Secure AI Cybersecurity Guide
           </p>
         </div>

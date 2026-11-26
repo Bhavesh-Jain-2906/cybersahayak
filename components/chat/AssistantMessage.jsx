@@ -67,7 +67,7 @@ function AssistantMessage({ message }) {
         </div>
 
         {/* Message Card */}
-        <div className="w-full rounded-2xl rounded-tl-sm bg-white dark:bg-[#0B0914]/75 dark:backdrop-blur-md border border-slate-200 dark:border-white/10 px-4 md:px-5 py-4 shadow-sm dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]">
+        <div className="w-full rounded-2xl rounded-tl-sm bg-white/80 dark:bg-[#0B0914]/75 backdrop-blur-md border border-slate-200/80 dark:border-white/10 px-4 md:px-5 py-4 shadow-sm dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]">
           <MarkdownRenderer content={message.content} />
 
           {/* RAG Knowledge References Accordion */}

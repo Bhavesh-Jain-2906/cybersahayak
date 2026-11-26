@@ -104,8 +104,8 @@ export default function ConversationItem({ conversation }) {
       onClick={() => selectConversation(conversation.id)}
       className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs md:text-sm cursor-pointer transition-all duration-200 select-none border ${
         isActive
-          ? 'bg-blue-600/15 dark:bg-[#231936]/65 text-blue-900 dark:text-white font-medium border-blue-500/30 dark:border-purple-400/30'
-          : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-white/5 dark:hover:border-white/10 hover:text-slate-900 dark:hover:text-zinc-100'
+          ? 'bg-white/80 dark:bg-[#231936]/65 text-blue-900 dark:text-white font-medium border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none'
+          : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 dark:hover:border-white/10 hover:text-slate-900 dark:hover:text-zinc-100'
       }`}
     >
       <MessageSquare

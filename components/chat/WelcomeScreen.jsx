@@ -40,15 +40,15 @@ export default function WelcomeScreen() {
       </div>
 
       {/* Main Title & Subtitle */}
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white text-center dark:drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]">
-        Welcome to <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-400 dark:from-purple-200 dark:via-purple-300 dark:to-purple-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(59,130,246,0.4)] dark:drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]">Connor</span>
+      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white text-center drop-shadow-[0_2px_10px_rgba(255,255,255,0.9)] dark:drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]">
+        Welcome to <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 dark:from-purple-200 dark:via-purple-300 dark:to-purple-400 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(59,130,246,0.28)] dark:drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]">Connor</span>
       </h1>
-      <p className="mt-2 text-sm md:text-base text-slate-600 dark:text-zinc-300 text-center max-w-xl dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+      <p className="mt-2 text-sm md:text-base text-slate-700 dark:text-zinc-300 text-center max-w-xl drop-shadow-[0_1px_8px_rgba(255,255,255,0.85)] dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
         Your intelligent assistant for understanding cyber threats, identifying online scams, securing compromised accounts, and preserving digital evidence.
       </p>
 
       {/* Privacy & Safety Guarantee Banner with smoked glass translucency */}
-      <div className="mt-6 w-full max-w-2xl flex items-center gap-3 p-3.5 rounded-xl bg-slate-100/90 dark:bg-[#0B0914]/65 dark:backdrop-blur-md border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-zinc-300 shadow-sm dark:shadow-[0_12px_30px_rgba(0,0,0,0.55)]">
+      <div className="mt-6 w-full max-w-2xl flex items-center gap-3 p-3.5 rounded-xl bg-white/75 dark:bg-[#0B0914]/65 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-xs text-slate-700 dark:text-zinc-300 shadow-sm dark:shadow-[0_12px_30px_rgba(0,0,0,0.55)]">
         <Lock className="w-5 h-5 text-blue-600 dark:text-purple-400 shrink-0" />
         <div className="leading-snug">
           <strong className="font-semibold text-slate-800 dark:text-white">
@@ -61,10 +61,10 @@ export default function WelcomeScreen() {
       {/* Suggested Questions Section */}
       <div className="mt-8 w-full">
         <div className="flex items-center justify-between mb-3 px-1">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
             Common Cyber Scenarios & Questions
           </h3>
-          <span className="text-[11px] text-slate-400 dark:text-zinc-500">Click any card to start</span>
+          <span className="text-[11px] text-slate-500 dark:text-zinc-500">Click any card to start</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -75,7 +75,7 @@ export default function WelcomeScreen() {
               <button
                 key={idx}
                 onClick={() => sendMessage(item.prompt)}
-                className="group relative flex flex-col text-left p-4 rounded-xl bg-white dark:bg-[#0B0914]/60 dark:backdrop-blur-md border border-slate-200 dark:border-white/10 hover:border-blue-500/50 dark:hover:border-purple-400/40 dark:hover:bg-[#141022]/75 shadow-sm dark:shadow-[0_10px_28px_rgba(0,0,0,0.5)] hover:shadow-md dark:hover:shadow-[0_14px_32px_rgba(0,0,0,0.7)] hover:-translate-y-0.5 transition-all duration-200"
+                className="group relative flex flex-col text-left p-4 rounded-xl bg-white/75 hover:bg-white/95 dark:bg-[#0B0914]/60 dark:hover:bg-[#141022]/75 backdrop-blur-md border border-slate-200/80 dark:border-white/10 hover:border-blue-500/50 dark:hover:border-purple-400/40 shadow-sm dark:shadow-[0_10px_28px_rgba(0,0,0,0.5)] hover:shadow-md dark:hover:shadow-[0_14px_32px_rgba(0,0,0,0.7)] hover:-translate-y-0.5 transition-all duration-200"
               >
                 <div className="flex items-center justify-between w-full mb-2">
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border border-blue-500/30 dark:border-purple-400/25 bg-blue-500/10 dark:bg-purple-500/15 text-blue-600 dark:text-purple-200">

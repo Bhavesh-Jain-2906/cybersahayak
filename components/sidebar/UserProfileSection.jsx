@@ -20,7 +20,7 @@ export default function UserProfileSection() {
   const displayEmail = user?.email || (profileSettings?.primaryBank ? `${profileSettings.primaryBank} User` : 'Protected Session');
 
   return (
-    <div className="border-t border-slate-200 dark:border-white/10 p-3 flex items-center justify-between gap-2 bg-slate-50/50 dark:bg-transparent">
+    <div className="border-t border-slate-300/60 dark:border-white/10 p-3 flex items-center justify-between gap-2 bg-transparent">
       <div className="flex items-center gap-2.5 min-w-0">
         <div
           className={`relative flex items-center justify-center w-8 h-8 rounded-full shrink-0 shadow-cool-blue-xs dark:shadow-none ${
@@ -55,7 +55,7 @@ export default function UserProfileSection() {
               <ShieldCheck className="w-3.5 h-3.5 text-blue-400 dark:text-purple-400 shrink-0" />
             )}
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-zinc-400 truncate">
+          <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
             {displayEmail}
           </p>
         </div>

@@ -44,10 +44,10 @@ export default function MessageComposer() {
 
   return (
     <div className="relative z-10 w-full max-w-4xl mx-auto px-3 sm:px-4 pb-3 pt-2">
-      {/* Input box with smoked Purple Noir translucency */}
+      {/* Input box with frosted glass translucency in light & dark mode */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex flex-col rounded-2xl bg-white dark:bg-[#0B0914]/75 dark:backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-lg dark:shadow-[0_12px_36px_rgba(0,0,0,0.65)] focus-within:border-blue-500/60 focus-within:dark:border-purple-400/50 focus-within:ring-2 focus-within:ring-blue-500/25 focus-within:dark:ring-purple-500/20 transition-all duration-200"
+        className="relative flex flex-col rounded-2xl bg-white/80 dark:bg-[#0B0914]/75 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-lg dark:shadow-[0_12px_36px_rgba(0,0,0,0.65)] focus-within:border-blue-500/60 focus-within:dark:border-purple-400/50 focus-within:ring-2 focus-within:ring-blue-500/25 focus-within:dark:ring-purple-500/20 transition-all duration-200"
       >
         <div className="flex items-end gap-2 p-3">
           <textarea
@@ -78,7 +78,7 @@ export default function MessageComposer() {
         </div>
 
         {/* Keyboard hints & safe notice */}
-        <div className="flex items-center justify-between px-3.5 py-1.5 border-t border-slate-100 dark:border-white/10 text-[11px] text-slate-400 dark:text-zinc-400">
+        <div className="flex items-center justify-between px-3.5 py-1.5 border-t border-slate-200/70 dark:border-white/10 text-[11px] text-slate-500 dark:text-zinc-400">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-500 dark:text-purple-400 shrink-0" />
             <span className="hidden sm:inline">Zero-Credential Policy: Never disclose PINs, OTPs or Passwords</span>
@@ -95,9 +95,9 @@ export default function MessageComposer() {
       </form>
 
       {/* Legal & Educational Disclaimer */}
-      <p className="mt-2 text-center text-[11px] text-slate-400 dark:text-zinc-400">
+      <p className="mt-2 text-center text-[11px] text-slate-600 dark:text-zinc-400">
         Connor is an informational guidance tool. For active financial fraud, dial{' '}
-        <span className="font-semibold text-slate-600 dark:text-zinc-200">1930</span> or visit{' '}
+        <span className="font-semibold text-slate-800 dark:text-zinc-200">1930</span> or visit{' '}
         <a
           href="https://cybercrime.gov.in"
           target="_blank"

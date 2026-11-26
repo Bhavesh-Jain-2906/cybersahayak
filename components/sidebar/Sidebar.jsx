@@ -60,7 +60,7 @@ export default function Sidebar() {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 flex flex-col h-full bg-slate-100 dark:bg-[#06050B]/40 dark:backdrop-blur-md border-r border-slate-200 dark:border-r-0 transition-all duration-300 ease-in-out ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 flex flex-col h-full bg-white/45 dark:bg-[#06050B]/40 backdrop-blur-md border-r-0 transition-all duration-300 ease-in-out ${
           isMobileSidebarOpen
             ? 'w-72 md:w-80 translate-x-0 shadow-2xl'
             : '-translate-x-full lg:translate-x-0'
@@ -71,7 +71,7 @@ export default function Sidebar() {
         }`}
       >
         {/* Header / Brand */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-transparent">
+        <div className="flex items-center justify-between p-4 border-b border-transparent">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 dark:from-[#2C1F42] dark:via-[#221834] dark:to-[#161122] dark:border dark:border-purple-400/30 text-white dark:text-purple-200 shadow-cool-blue dark:shadow-none shrink-0">
               <ShieldAlert className="w-5 h-5" />
@@ -122,8 +122,8 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'chat'
-                ? 'bg-blue-600/15 dark:bg-[#241B35]/70 text-blue-600 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-cool-blue-xs dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
             }`}
           >
             <MessageSquare className="w-4 h-4 text-blue-500 dark:text-purple-300 shrink-0" />
@@ -140,8 +140,8 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'dashboard'
-                ? 'bg-blue-600/15 dark:bg-[#241B35]/70 text-blue-600 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-cool-blue-xs dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
             }`}
           >
             <LayoutDashboard className="w-4 h-4 text-indigo-500 dark:text-purple-300 shrink-0" />
@@ -155,8 +155,8 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'awareness'
-                ? 'bg-blue-600/15 dark:bg-[#241B35]/70 text-blue-600 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-cool-blue-xs dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
             }`}
           >
             <BookOpen className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
@@ -173,8 +173,8 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'quiz'
-                ? 'bg-blue-600/15 dark:bg-[#241B35]/70 text-blue-600 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-cool-blue-xs dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
             }`}
           >
             <HelpCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
@@ -193,8 +193,8 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'resources'
-                ? 'bg-blue-600/15 dark:bg-[#241B35]/70 text-blue-600 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-cool-blue-xs dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
             }`}
           >
             <ShieldCheck className="w-4 h-4 text-cyan-500 dark:text-purple-300 shrink-0" />
@@ -224,7 +224,7 @@ export default function Sidebar() {
 
         {/* Conversations Header with New Chat */}
         <div className="px-3 pt-2 pb-1.5">
-          <div className="border-t border-slate-200 dark:border-white/10 pt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-400 dark:text-zinc-400 uppercase tracking-wider px-1">
+          <div className="border-t border-slate-300/60 dark:border-white/10 pt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider px-1">
             <span>Conversations</span>
             <button
               onClick={createNewChat}
@@ -261,7 +261,7 @@ export default function Sidebar() {
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-white dark:bg-[#0A0812]/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-0 dark:focus:border-purple-400/50 transition-all"
+              className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-white/70 dark:bg-[#0A0812]/60 border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-0 dark:focus:border-purple-400/50 transition-all"
             />
             {searchQuery && (
               <button

@@ -4,7 +4,9 @@ import React, { useEffect, useRef } from 'react';
 import styles from './BlackHoleBackground.module.css';
 
 /**
- * Purple Noir animated black-hole video backdrop rendered behind the main AI chat UI in dark mode.
+ * Theme-aware animated black-hole video backdrop rendered behind the main AI chat & sidebar:
+ * - Dark mode: Purple Noir
+ * - Light ("white") mode: Inverted Platinum / White-Hole aesthetic
  */
 export default function BlackHoleBackground() {
   const videoRef = useRef(null);
@@ -30,7 +32,7 @@ export default function BlackHoleBackground() {
   }, []);
 
   return (
-    <div className={`hidden dark:block ${styles.root}`} aria-hidden="true">
+    <div className={styles.root} aria-hidden="true">
       <video
         ref={videoRef}
         className={styles.videoEl}
@@ -41,7 +43,7 @@ export default function BlackHoleBackground() {
         playsInline
         preload="auto"
       />
-      <div className={styles.purpleGrade} />
+      <div className={styles.colorGrade} />
       <div className={styles.ambientGlow} />
       <div className={styles.scrim} />
     </div>

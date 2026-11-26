@@ -18,10 +18,10 @@ function UserMessage({ message }) {
     <div className="group flex justify-end gap-3 px-4 py-3 md:px-6">
       <div className="flex flex-col items-end max-w-2xl">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[11px] text-slate-400 dark:text-zinc-400">
+          <span className="text-[11px] text-slate-500 dark:text-zinc-400">
             {formatMessageTime(message.createdAt)}
           </span>
-          <span className="text-xs font-semibold text-slate-700 dark:text-zinc-100">
+          <span className="text-xs font-semibold text-slate-800 dark:text-zinc-100">
             You
           </span>
         </div>

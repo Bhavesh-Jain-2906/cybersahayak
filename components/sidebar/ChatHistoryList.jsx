@@ -49,7 +49,7 @@ export default function ChatHistoryList() {
 
         return (
           <div key={category} className="space-y-1">
-            <h4 className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <h4 className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500">
               {category}
             </h4>
             <div className="space-y-0.5">
