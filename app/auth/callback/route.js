@@ -68,9 +68,12 @@ export async function GET(request) {
         }
         return NextResponse.redirect(`${origin}${nextPath}`);
       }
-      return NextResponse.redirect(
-        `${origin}/?auth_error=${encodeURIComponent(error.message || 'Authentication link expired or invalid.')}`
-      );
+      const rawErr = error.message || 'Authentication link expired or invalid.';
+      const friendlyErr =
+        rawErr.toLowerCase().includes('code verifier') || rawErr.toLowerCase().includes('code_verifier')
+          ? 'Please open the one-time email link in the same browser where you requested it, or request a fresh link.'
+          : rawErr;
+      return NextResponse.redirect(`${origin}/?auth_error=${encodeURIComponent(friendlyErr)}`);
     }
 
     if (tokenHash && otpType) {

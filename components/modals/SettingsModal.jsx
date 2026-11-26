@@ -18,6 +18,10 @@ import {
   Cpu,
   LogOut,
   Mail,
+  Eye,
+  EyeOff,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
@@ -48,11 +52,19 @@ export default function SettingsModal() {
     updateProfileSettings,
   } = useChat();
 
-  const { user, profile, updateName, signOut } = useAuth();
+  const { user, profile, isAdmin, updateName, updateUserPassword, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'preferences' | 'data' | 'about'
   const [confirmClear, setConfirmClear] = useState(false);
   const [saveToast, setSaveToast] = useState(false);
+
+  // Change password state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
 
   // Form local state
   const [displayName, setDisplayName] = useState(
@@ -92,6 +104,42 @@ export default function SettingsModal() {
 
     setSaveToast(true);
     setTimeout(() => setSaveToast(false), 2500);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    const cleanNew = newPassword.trim();
+    const cleanConfirm = confirmPassword.trim();
+
+    if (!cleanNew || cleanNew.length < 6) {
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+    if (cleanNew !== cleanConfirm) {
+      setPasswordError('Passwords do not match.');
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      const result = await updateUserPassword(cleanNew);
+      if (!result.success) {
+        setPasswordError(result.error || 'Could not update password.');
+        return;
+      }
+
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordSuccess('Password updated successfully!');
+      setTimeout(() => setPasswordSuccess(''), 3500);
+    } catch (err) {
+      setPasswordError(err?.message || 'Unexpected error updating password.');
+    } finally {
+      setUpdatingPassword(false);
+    }
   };
 
   const handleExportData = () => {
@@ -200,6 +248,7 @@ export default function SettingsModal() {
         <div className="p-5 overflow-y-auto space-y-5 text-sm flex-1 scrollbar-thin">
           {/* TAB 1: Profile & Appearance */}
           {activeTab === 'profile' && (
+            <>
             <form onSubmit={handleSaveProfile} className="space-y-4">
               {/* Authenticated Email Badge */}
               {user?.email && (
@@ -323,6 +372,88 @@ export default function SettingsModal() {
                 </button>
               </div>
             </form>
+
+            {user && !isAdmin && (
+              <form
+                onSubmit={handleChangePassword}
+                className="pt-4 mt-4 border-t border-slate-200 dark:border-blue-950/60 space-y-3"
+              >
+                <div className="flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+                  <h4 className="text-xs font-semibold text-slate-800 dark:text-white">
+                    Change Account Password
+                  </h4>
+                </div>
+
+                {passwordError && (
+                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-300 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{passwordError}</span>
+                  </div>
+                )}
+
+                {passwordSuccess && (
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>{passwordSuccess}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (passwordError) setPasswordError('');
+                      }}
+                      placeholder="New password (min 6 chars)"
+                      autoComplete="new-password"
+                      className="w-full px-3 pr-9 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#060a14] border border-slate-200 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-blue-200"
+                    >
+                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (passwordError) setPasswordError('');
+                    }}
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#060a14] border border-slate-200 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={updatingPassword}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-blue-950/80 dark:hover:bg-blue-900/80 border border-slate-700 dark:border-blue-700/50 text-white font-semibold text-xs transition-all disabled:opacity-50"
+                  >
+                    {updatingPassword ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <span>Update Password</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+            </>
           )}
 
           {/* TAB 2: AI Guidance & Conversation Preferences */}

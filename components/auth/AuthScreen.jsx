@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   KeyRound,
   ArrowLeft,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/lib/constants';
@@ -27,9 +28,16 @@ const NOIR_PURPLE_PARTICLES = [
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AuthScreen() {
-  const { signInWithPassword, signUpWithPassword, sendPasswordResetEmail } = useAuth();
+  const {
+    signInWithPassword,
+    signInWithMagicLink,
+    signUpWithPassword,
+    resendVerificationEmail,
+    sendPasswordResetEmail,
+  } = useAuth();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
+  const [loginMethod, setLoginMethod] = useState('password'); // 'password' | 'link'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,7 +45,9 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
-  const [resetCooldown, setResetCooldown] = useState(0);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
+  const [linkCooldown, setLinkCooldown] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
 
@@ -189,12 +199,12 @@ export default function AuthScreen() {
     }
   }, []);
 
-  // Cooldown timer for resending password-reset links
+  // Cooldown timer for resending confirmation, sign-in, or password-reset links
   useEffect(() => {
-    if (resetCooldown <= 0) return undefined;
-    const timer = setTimeout(() => setResetCooldown((prev) => prev - 1), 1000);
+    if (linkCooldown <= 0) return undefined;
+    const timer = setTimeout(() => setLinkCooldown((prev) => prev - 1), 1000);
     return () => clearTimeout(timer);
-  }, [resetCooldown]);
+  }, [linkCooldown]);
 
   // Auto-clear error when user modifies any input
   const handleInputChange = (setter) => (e) => {
@@ -209,6 +219,38 @@ export default function AuthScreen() {
     setMode(targetMode);
     setErrorMessage('');
     setSuccessNotice('');
+    setPendingConfirmationEmail('');
+  };
+
+  // Toggle between Password login and One-Time Gmail Link login
+  const switchLoginMethod = (method) => {
+    setLoginMethod(method);
+    setErrorMessage('');
+    setSuccessNotice('');
+    setPendingConfirmationEmail('');
+  };
+
+  // Resend one-time confirmation email for pending signup
+  const handleResendConfirmation = async () => {
+    const targetEmail = (pendingConfirmationEmail || email).trim().toLowerCase();
+    if (!targetEmail || linkCooldown > 0) return;
+
+    setResendingConfirmation(true);
+    setErrorMessage('');
+
+    try {
+      const result = await resendVerificationEmail(targetEmail);
+      if (!result.success) {
+        setErrorMessage(result.error || 'Could not resend confirmation link.');
+      } else {
+        setSuccessNotice(result.message);
+        setLinkCooldown(30);
+      }
+    } catch (err) {
+      setErrorMessage(err?.message || 'Failed to resend confirmation link.');
+    } finally {
+      setResendingConfirmation(false);
+    }
   };
 
   // Validate and submit form
@@ -216,6 +258,7 @@ export default function AuthScreen() {
     e.preventDefault();
     setErrorMessage('');
     setSuccessNotice('');
+    setPendingConfirmationEmail('');
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
@@ -226,7 +269,7 @@ export default function AuthScreen() {
         return;
       }
       if (!EMAIL_REGEX.test(cleanEmail)) {
-        setErrorMessage('Please enter a valid email address (e.g. user@example.com).');
+        setErrorMessage('Please enter a valid email address (e.g. your.name@gmail.com).');
         return;
       }
 
@@ -237,10 +280,38 @@ export default function AuthScreen() {
           setErrorMessage(result.error || 'Could not send reset link.');
         } else {
           setSuccessNotice(result.message);
-          setResetCooldown(30);
+          setLinkCooldown(30);
         }
       } catch (err) {
         setErrorMessage(err?.message || 'Unexpected error sending reset email.');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // One-time Gmail sign-in link mode (Magic Link)
+    if (mode === 'login' && loginMethod === 'link') {
+      if (!cleanEmail) {
+        setErrorMessage('Please enter your email address.');
+        return;
+      }
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setErrorMessage('Please enter a valid email address (e.g. your.name@gmail.com).');
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        const result = await signInWithMagicLink(cleanEmail);
+        if (!result.success) {
+          setErrorMessage(result.error || 'Could not send one-time sign-in link.');
+        } else {
+          setSuccessNotice(result.message);
+          setLinkCooldown(30);
+        }
+      } catch (err) {
+        setErrorMessage(err?.message || 'Failed to send one-time sign-in link.');
       } finally {
         setSubmitting(false);
       }
@@ -265,7 +336,7 @@ export default function AuthScreen() {
       }
 
       if (!EMAIL_REGEX.test(cleanEmail)) {
-        setErrorMessage('Please enter a valid email address (e.g. user@example.com).');
+        setErrorMessage('Please enter a valid email address (e.g. your.name@gmail.com).');
         return;
       }
 
@@ -298,6 +369,9 @@ export default function AuthScreen() {
 
         if (!result.success) {
           setErrorMessage(result.error || 'Failed to sign in. Please verify your credentials.');
+          if (result.needsEmailConfirmation && result.email) {
+            setPendingConfirmationEmail(result.email);
+          }
         }
       } else {
         const result = await signUpWithPassword({
@@ -308,6 +382,14 @@ export default function AuthScreen() {
 
         if (!result.success) {
           setErrorMessage(result.error || 'Failed to create account.');
+        } else if (result.requiresEmailVerification) {
+          setSuccessNotice(result.message);
+          setPendingConfirmationEmail(result.email || cleanEmail);
+          setLinkCooldown(30);
+          setPassword('');
+          setConfirmPassword('');
+          setLoginMethod('password');
+          setMode('login');
         } else if (result.message) {
           setSuccessNotice(result.message);
           setMode('login');
@@ -439,9 +521,11 @@ export default function AuthScreen() {
                 </h2>
                 <p className="text-xs text-[#A1A1AA] mt-1">
                   {mode === 'login'
-                    ? 'Pick up right where you left off in your private cyber guidance hub.'
+                    ? loginMethod === 'link'
+                      ? 'Sign in securely using a one-time link emailed to your inbox.'
+                      : 'Sign in with password or switch to a one-time Gmail link.'
                     : mode === 'register'
-                      ? 'Set up an isolated account to save guidance threads and checkup progress.'
+                      ? 'Create an account and confirm your email via a one-time Gmail link.'
                       : 'Enter your registered email address and we will send a password reset link.'}
                 </p>
               </div>
@@ -478,7 +562,26 @@ export default function AuthScreen() {
               {successNotice && (
                 <div className="mb-3.5 p-3 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5 animate-fade-in">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <p className="flex-1">{successNotice}</p>
+                  <div className="flex-1 space-y-1.5">
+                    <p>{successNotice}</p>
+                    {pendingConfirmationEmail && (
+                      <button
+                        type="button"
+                        onClick={handleResendConfirmation}
+                        disabled={resendingConfirmation || linkCooldown > 0}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-200 hover:text-white underline underline-offset-2 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${resendingConfirmation ? 'animate-spin' : ''}`} />
+                        <span>
+                          {resendingConfirmation
+                            ? 'Resending...'
+                            : linkCooldown > 0
+                              ? `Resend confirmation link in ${linkCooldown}s`
+                              : 'Resend confirmation link'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -486,7 +589,26 @@ export default function AuthScreen() {
               {errorMessage && (
                 <div className="mb-3.5 p-3 rounded-[8px] bg-red-500/15 border border-red-500/35 text-red-200 text-xs flex items-start gap-2.5 animate-fade-in">
                   <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <p className="flex-1">{errorMessage}</p>
+                  <div className="flex-1 space-y-1.5">
+                    <p>{errorMessage}</p>
+                    {pendingConfirmationEmail && (
+                      <button
+                        type="button"
+                        onClick={handleResendConfirmation}
+                        disabled={resendingConfirmation || linkCooldown > 0}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-red-100 hover:text-white underline underline-offset-2 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${resendingConfirmation ? 'animate-spin' : ''}`} />
+                        <span>
+                          {resendingConfirmation
+                            ? 'Resending...'
+                            : linkCooldown > 0
+                              ? `Resend confirmation link in ${linkCooldown}s`
+                              : 'Resend confirmation link'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -515,12 +637,23 @@ export default function AuthScreen() {
                 )}
 
                 <div>
-                  <label
-                    htmlFor="auth-email"
-                    className="block text-xs font-medium text-white mb-1.5"
-                  >
-                    Email Address
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label
+                      htmlFor="auth-email"
+                      className="block text-xs font-medium text-white"
+                    >
+                      Email Address
+                    </label>
+                    {mode === 'login' && (
+                      <button
+                        type="button"
+                        onClick={() => switchLoginMethod(loginMethod === 'password' ? 'link' : 'password')}
+                        className="text-[11px] font-medium text-[#C084FC] hover:text-[#E9D5FF] transition-colors focus:outline-none"
+                      >
+                        {loginMethod === 'password' ? 'Use one-time Gmail link' : 'Use password instead'}
+                      </button>
+                    )}
+                  </div>
                   <div className="relative flex items-center">
                     <Mail className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
                     <input
@@ -529,14 +662,14 @@ export default function AuthScreen() {
                       inputMode="email"
                       value={email}
                       onChange={handleInputChange(setEmail)}
-                      placeholder="your.email@example.com"
+                      placeholder="your.name@gmail.com"
                       autoComplete="email"
                       className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
                     />
                   </div>
                 </div>
 
-                {mode !== 'forgot' && (
+                {(mode === 'register' || (mode === 'login' && loginMethod === 'password')) && (
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label
@@ -591,7 +724,7 @@ export default function AuthScreen() {
                       <p className="text-[11px] text-[#71717A]">
                         {mode === 'login'
                           ? 'Encrypted Supabase session • Never share banking OTPs or PINs.'
-                          : 'Use a strong, unique password with at least 6 characters.'}
+                          : 'A one-time confirmation link will be emailed to verify your inbox.'}
                       </p>
                       {mode === 'login' &&
                         password.length > 0 &&
@@ -605,6 +738,19 @@ export default function AuthScreen() {
                           </span>
                         )}
                     </div>
+                  </div>
+                )}
+
+                {mode === 'login' && loginMethod === 'link' && (
+                  <div className="flex items-center justify-between text-[11px] text-[#71717A]">
+                    <span>Open the one-time link in Gmail (same browser) to sign in.</span>
+                    <button
+                      type="button"
+                      onClick={() => switchMode('forgot')}
+                      className="font-medium text-[#C084FC] hover:text-[#E9D5FF] shrink-0 ml-2 transition-colors"
+                    >
+                      Forgot password?
+                    </button>
                   </div>
                 )}
 
@@ -644,30 +790,43 @@ export default function AuthScreen() {
 
                 <button
                   type="submit"
-                  disabled={submitting || (mode === 'forgot' && resetCooldown > 0)}
+                  disabled={
+                    submitting ||
+                    ((mode === 'forgot' || (mode === 'login' && loginMethod === 'link')) && linkCooldown > 0)
+                  }
                   className="w-full mt-2 flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs sm:text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-[#09090B]" />
                       <span>
-                        {mode === 'login'
-                          ? 'Verifying Session...'
-                          : mode === 'register'
-                            ? 'Setting Up Workspace...'
-                            : 'Sending Reset Link...'}
+                        {mode === 'forgot'
+                          ? 'Sending Reset Link...'
+                          : mode === 'login' && loginMethod === 'link'
+                            ? 'Sending Sign-In Link...'
+                            : mode === 'login'
+                              ? 'Verifying Session...'
+                              : 'Sending Confirmation Link...'}
                       </span>
                     </>
                   ) : mode === 'forgot' ? (
                     <span>
-                      {resetCooldown > 0
-                        ? `Resend Link in ${resetCooldown}s`
+                      {linkCooldown > 0
+                        ? `Resend Link in ${linkCooldown}s`
                         : successNotice
                           ? 'Resend Reset Link'
                           : 'Send Password Reset Link'}
                     </span>
+                  ) : mode === 'login' && loginMethod === 'link' ? (
+                    <span>
+                      {linkCooldown > 0
+                        ? `Resend Link in ${linkCooldown}s`
+                        : successNotice
+                          ? 'Resend One-Time Link'
+                          : 'Send One-Time Gmail Link'}
+                    </span>
                   ) : (
-                    <span>{mode === 'login' ? 'Continue to Workspace' : 'Create Protected Account'}</span>
+                    <span>{mode === 'login' ? 'Continue to Workspace' : 'Create Account & Send Link'}</span>
                   )}
                 </button>
               </form>

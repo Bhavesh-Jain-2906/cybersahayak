@@ -22,6 +22,9 @@ function formatSupabaseAuthError(rawMessage) {
   if (msg.includes('Email address') && msg.includes('not authorized')) {
     return 'Supabase default email sender restricts external addresses. Configure Custom SMTP (Gmail/Resend) in Supabase Auth Settings to deliver emails to any Gmail inbox.';
   }
+  if (msg.toLowerCase().includes('code verifier') || msg.toLowerCase().includes('code_verifier')) {
+    return 'Please open the one-time email link in the same browser where you requested it, or request a new link below.';
+  }
   if (msg.toLowerCase().includes('rate limit') || msg.includes('over_email_send_rate_limit') || msg.includes('security purposes')) {
     return 'Too many email requests in a short window. Please wait a minute before trying again.';
   }
@@ -175,12 +178,18 @@ export function AuthProvider({ children }) {
 
       if (error) {
         let msg = error.message;
+        const needsEmailConfirmation = msg.includes('Email not confirmed');
         if (msg.includes('Invalid login credentials')) {
           msg = 'Invalid credentials. Please verify your email/username and password.';
-        } else if (msg.includes('Email not confirmed')) {
-          msg = 'Email address has not been confirmed. Please check your inbox or confirm your email.';
+        } else if (needsEmailConfirmation) {
+          msg = 'Your email is not confirmed yet. Click the one-time link in your inbox or resend it below.';
         }
-        return { success: false, error: formatSupabaseAuthError(msg) };
+        return {
+          success: false,
+          error: formatSupabaseAuthError(msg),
+          needsEmailConfirmation,
+          email: cleanEmail,
+        };
       }
 
       setIsRecoveryMode(false);
@@ -256,13 +265,78 @@ export function AuthProvider({ children }) {
 
       return {
         success: true,
+        requiresEmailVerification: true,
+        email: cleanEmail,
         user: data.user,
-        message: 'Account created successfully! Check your inbox if verification is required, or sign in.',
+        message: `Confirmation link sent to ${cleanEmail}! Click the one-time link in your Gmail inbox (in this same browser) to activate your account.`,
       };
     } catch (err) {
       return { success: false, error: err.message || 'An unexpected error occurred during sign up.' };
     }
   }, [supabase, refreshProfile]);
+
+  // Sign in via one-time Gmail magic link
+  const signInWithMagicLink = useCallback(async (email) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    if (!cleanEmail) {
+      return { success: false, error: 'Please enter your email address.' };
+    }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid email address (e.g. name@gmail.com).' };
+    }
+
+    try {
+      const emailRedirectTo = `${window.location.origin}/auth/callback`;
+      const { error } = await supabase.auth.signInWithOtp({
+        email: cleanEmail,
+        options: {
+          emailRedirectTo,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      return {
+        success: true,
+        email: cleanEmail,
+        message: `One-time sign-in link sent to ${cleanEmail}! Open the link in your Gmail inbox (in this same browser) to sign in.`,
+      };
+    } catch (err) {
+      return { success: false, error: err.message || 'Failed to send one-time sign-in link.' };
+    }
+  }, [supabase]);
+
+  // Resend one-time confirmation link for pending signups
+  const resendVerificationEmail = useCallback(async (email) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid email address first.' };
+    }
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: formatSupabaseAuthError(error.message) };
+      }
+
+      return {
+        success: true,
+        message: `Confirmation link resent to ${cleanEmail}. Check your Gmail inbox (and Spam/Promotions).`,
+      };
+    } catch (err) {
+      return { success: false, error: err.message || 'Failed to resend confirmation link.' };
+    }
+  }, [supabase]);
 
   // Send password reset email via Supabase recovery flow
   const sendPasswordResetEmail = useCallback(async (email) => {
@@ -364,7 +438,9 @@ export function AuthProvider({ children }) {
         isAdmin,
         isRecoveryMode,
         signInWithPassword,
+        signInWithMagicLink,
         signUpWithPassword,
+        resendVerificationEmail,
         sendPasswordResetEmail,
         updateUserPassword,
         clearRecoveryMode,
