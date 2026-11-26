@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { runCyberSahayakWorkflow } from '@/lib/graph';
+import { runConnorWorkflow } from '@/lib/graph';
 import { getAuthenticatedUser } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * CyberSahayak LangGraph Conversational API Endpoint with Supabase Auth & RLS
+ * Connor LangGraph Conversational API Endpoint with Supabase Auth & RLS
  *
  * POST /api/chat
  * Payload:
@@ -30,7 +30,7 @@ export async function POST(req) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Unauthorized. Please sign in to CyberSahayak to access the AI assistant.',
+          error: 'Unauthorized. Please sign in to Connor to access the AI assistant.',
         },
         { status: 401 }
       );
@@ -220,7 +220,7 @@ export async function POST(req) {
     }
 
     // 5. Execute LangGraph.js Workflow with thread isolation
-    const result = await runCyberSahayakWorkflow({
+    const result = await runConnorWorkflow({
       message: trimmedMessage,
       history: sanitizedHistory,
       conversationId: targetConvId,

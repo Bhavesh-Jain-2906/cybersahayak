@@ -4,11 +4,11 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ChatProvider } from '@/context/ChatContext';
 
 export const metadata = {
-  title: 'CyberSahayak — AI-Powered Cybercrime Assistance Platform',
+  title: 'Connor — AI-Powered Cybercrime Assistance Platform',
   description:
     'Conversational AI assistant providing immediate guidance, incident awareness, account recovery steps, and digital evidence preservation for cyber threats.',
   keywords: [
-    'CyberSahayak',
+    'Connor',
     'cybercrime guidance',
     'UPI fraud assistance',
     'phishing awareness',

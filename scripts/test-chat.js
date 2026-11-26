@@ -32,7 +32,7 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const { generateCyberSahayakResponse, shouldTriggerLegalRetrieval } = require('../lib/llm/chatEngine');
+const { generateConnorResponse, shouldTriggerLegalRetrieval } = require('../lib/llm/chatEngine');
 const { getAvailableProviders } = require('../lib/llm/model');
 
 const TEST_CASES = [
@@ -74,15 +74,15 @@ const TEST_CASES = [
   {
     id: 6,
     name: 'Pure Conversational Greeting (No Retrieval Needed)',
-    message: 'Hello CyberSahayak, I am feeling a bit stressed. Can you explain what you do?',
+    message: 'Hello Connor, I am feeling a bit stressed. Can you explain what you do?',
     expectRag: false,
-    keywordsToCheck: ['cybersahayak', 'guide', 'assist'],
+    keywordsToCheck: ['connor', 'guide', 'assist'],
   },
 ];
 
 async function runTests() {
   console.log('='.repeat(80));
-  console.log('   CYBERSAHAYAK — STAGE 4 LANGCHAIN.JS & LLM INTEGRATION TEST SUITE');
+  console.log('   CONNOR — STAGE 4 LANGCHAIN.JS & LLM INTEGRATION TEST SUITE');
   console.log('='.repeat(80));
 
   const providers = getAvailableProviders();
@@ -104,7 +104,7 @@ async function runTests() {
 
     const startTime = Date.now();
     try {
-      const result = await generateCyberSahayakResponse({
+      const result = await generateConnorResponse({
         message: tc.message,
         history: [],
       });
@@ -156,7 +156,7 @@ async function runTests() {
     const turn2Message = 'No, the hacker changed the email address to something else!';
 
     console.log(`User Turn 2: "${turn2Message}"`);
-    const turn2Result = await generateCyberSahayakResponse({
+    const turn2Result = await generateConnorResponse({
       message: turn2Message,
       history: turn1History,
     });

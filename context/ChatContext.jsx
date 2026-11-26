@@ -89,7 +89,7 @@ export function ChatProvider({ children }) {
   // Hydrate local UI preferences
   useEffect(() => {
     try {
-      const savedProfile = localStorage.getItem('cybersahayak_profile');
+      const savedProfile = localStorage.getItem('connor_profile') || localStorage.getItem('cybersahayak_profile');
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile);
         setProfileSettings((prev) => ({
@@ -98,11 +98,11 @@ export function ChatProvider({ children }) {
           displayName: profile?.name || user?.user_metadata?.name || parsed.displayName || 'Digital Citizen',
         }));
       }
-      const savedQuiz = localStorage.getItem('cybersahayak_quiz');
+      const savedQuiz = localStorage.getItem('connor_quiz') || localStorage.getItem('cybersahayak_quiz');
       if (savedQuiz) {
         setQuizStats(JSON.parse(savedQuiz));
       }
-      const savedArticles = localStorage.getItem('cybersahayak_viewed_articles');
+      const savedArticles = localStorage.getItem('connor_viewed_articles') || localStorage.getItem('cybersahayak_viewed_articles');
       if (savedArticles) {
         setRecentlyViewedArticles(JSON.parse(savedArticles));
       }
@@ -118,7 +118,7 @@ export function ChatProvider({ children }) {
     setProfileSettings((prev) => {
       const updated = { ...prev, ...newSettings };
       try {
-        localStorage.setItem('cybersahayak_profile', JSON.stringify(updated));
+        localStorage.setItem('connor_profile', JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -134,7 +134,7 @@ export function ChatProvider({ children }) {
     };
     setQuizStats(newStats);
     try {
-      localStorage.setItem('cybersahayak_quiz', JSON.stringify(newStats));
+      localStorage.setItem('connor_quiz', JSON.stringify(newStats));
     } catch {}
   }, []);
 
@@ -144,7 +144,7 @@ export function ChatProvider({ children }) {
       const filtered = prev.filter((id) => id !== articleId);
       const updated = [articleId, ...filtered].slice(0, 5);
       try {
-        localStorage.setItem('cybersahayak_viewed_articles', JSON.stringify(updated));
+        localStorage.setItem('connor_viewed_articles', JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -419,7 +419,7 @@ export function ChatProvider({ children }) {
     } catch (err) {
       setIsLoading(false);
       setError({
-        message: err.message || 'Failed to connect to CyberSahayak AI assistant.',
+        message: err.message || 'Failed to connect to Connor AI assistant.',
         retryPrompt: trimmed,
         targetConvId: targetConvId,
       });

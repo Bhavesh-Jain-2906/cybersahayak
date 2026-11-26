@@ -37,7 +37,7 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const { runCyberSahayakWorkflow } = require('../lib/graph');
+const { runConnorWorkflow } = require('../lib/graph');
 
 const TEST_SCENARIOS = [
   {
@@ -101,7 +101,7 @@ const TEST_SCENARIOS = [
     expectedCategory: 'out_of_scope',
     expectedNeedsRetrieval: false,
     expectedUrgency: 'low',
-    requiredMentions: ['cybersahayak'],
+    requiredMentions: ['connor'],
   },
   {
     id: 8,
@@ -116,7 +116,7 @@ const TEST_SCENARIOS = [
 
 async function runLangGraphTests() {
   console.log('='.repeat(80));
-  console.log('   CYBERSAHAYAK — STAGE 5 LANGGRAPH.JS WORKFLOW TEST SUITE');
+  console.log('   CONNOR — STAGE 5 LANGGRAPH.JS WORKFLOW TEST SUITE');
   console.log('='.repeat(80));
 
   let passed = 0;
@@ -128,7 +128,7 @@ async function runLangGraphTests() {
 
     const startTime = Date.now();
     try {
-      const result = await runCyberSahayakWorkflow({
+      const result = await runConnorWorkflow({
         message: sc.message,
         conversationId: `test-session-${sc.id}`,
       });
@@ -184,7 +184,7 @@ async function runLangGraphTests() {
     const conversationId = 'user-session-repeat-check';
     const priorClarifications = ['Have you already called your bank to freeze the affected UPI ID?'];
 
-    const turn2Result = await runCyberSahayakWorkflow({
+    const turn2Result = await runConnorWorkflow({
       message: 'Yes, I called the bank and they blocked my account. What is next?',
       history: [
         { role: 'user', content: 'Someone took ₹10000 via a scam link on PhonePe.' },

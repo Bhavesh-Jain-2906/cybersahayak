@@ -21,14 +21,14 @@ export default function MessageList() {
 
   if (messages.length === 0 && !error) {
     return (
-      <div className="flex-1 overflow-y-auto">
+      <div className="relative z-10 flex-1 overflow-y-auto">
         <WelcomeScreen />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto py-4 space-y-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+    <div className="relative z-10 flex-1 overflow-y-auto py-4 space-y-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
       {messages.map((message) => {
         if (message.role === 'user') {
           return <UserMessage key={message.id} message={message} />;

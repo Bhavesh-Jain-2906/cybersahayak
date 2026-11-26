@@ -1,8 +1,8 @@
-# CyberSahayak — Comprehensive AI Agent Technical Specification & Repository Manual
+# Connor — Comprehensive AI Agent Technical Specification & Repository Manual
 
 ```yaml
 project:
-  name: "CyberSahayak"
+  name: "Connor"
   version: "0.1.0"
   runtime: "Node.js >= 18.17.0"
   framework: "Next.js 14.2.24 (App Router, React 18, Tailwind CSS)"
@@ -16,7 +16,7 @@ project:
     - provider: "Google Gemini"
       models: ["gemini-flash-latest"]
     - provider: "Local Fallback"
-      models: ["cybersahayak-demo-mode"]
+      models: ["connor-demo-mode"]
   vector_store: "In-Memory Semantic Vector Store with Cosine Similarity over cyber-law.pdf"
   evaluation_framework: "RAGAS & G-Eval (LLM-as-a-Judge benchmark harness)"
 ```
@@ -25,7 +25,7 @@ project:
 
 ## 1. System Identity & Mission Boundaries
 
-CyberSahayak is an empathetic, AI-powered Cybercrime Assistance, Legal Guidance, and Triage Platform designed for Indian citizens. It bridges the critical gap between panic and official reporting during the initial "Golden Hours" of a cyber attack.
+Connor is an empathetic, AI-powered Cybercrime Assistance, Legal Guidance, and Triage Platform designed for Indian citizens. The AI assistant itself is named **Connor** and introduces itself as Connor. It bridges the critical gap between panic and official reporting during the initial "Golden Hours" of a cyber attack.
 
 ### Strict Invariant Constraints (Zero-Tolerance Rules)
 Any AI agent modifying or extending this codebase **MUST** preserve these invariants:
@@ -250,7 +250,7 @@ Implemented in `lib/llm/model.js` and `lib/llm/chatEngine.js`:
 
 ## 8. Automated Evaluation & Benchmarks (`npm run eval`)
 
-CyberSahayak includes an automated **LLM-as-a-Judge Evaluation Engine** (`scripts/eval-llm.js`):
+Connor includes an automated **LLM-as-a-Judge Evaluation Engine** (`scripts/eval-llm.js`):
 
 ```bash
 npm run eval

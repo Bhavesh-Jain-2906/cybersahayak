@@ -16,12 +16,12 @@ export default function ChatHeader() {
   } = useChat();
 
   return (
-    <header className="h-14 border-b border-slate-200 dark:border-blue-950/70 bg-white/80 dark:bg-black/90 backdrop-blur-md px-3 md:px-5 flex items-center justify-between gap-3 shrink-0 z-10 dark:shadow-[0_4px_25px_rgba(0,0,0,0.9)]">
+    <header className="relative h-14 border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#06050B]/35 backdrop-blur-md px-3 md:px-5 flex items-center justify-between gap-3 shrink-0 z-10 dark:shadow-none">
       <div className="flex items-center gap-2.5 min-w-0">
         {/* Mobile Sidebar Hamburger Toggle */}
         <button
           onClick={() => setIsMobileSidebarOpen(true)}
-          className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-blue-300/70 dark:hover:text-blue-100 hover:bg-slate-100 dark:hover:bg-blue-950/50 lg:hidden"
+          className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-purple-200/75 dark:hover:text-purple-100 hover:bg-slate-100 dark:hover:bg-purple-950/45 lg:hidden"
           aria-label="Open mobile sidebar"
         >
           <Menu className="w-5 h-5" />
@@ -31,7 +31,7 @@ export default function ChatHeader() {
         {!isDesktopSidebarOpen && (
           <button
             onClick={toggleDesktopSidebar}
-            className="hidden lg:flex p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-blue-300/70 dark:hover:text-blue-100 hover:bg-slate-100 dark:hover:bg-blue-950/50 transition-colors"
+            className="hidden lg:flex p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-purple-200/75 dark:hover:text-purple-100 hover:bg-slate-100 dark:hover:bg-purple-950/45 transition-colors"
             title="Open sidebar"
             aria-label="Open desktop sidebar"
           >
@@ -41,10 +41,10 @@ export default function ChatHeader() {
 
         {/* Title */}
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-slate-800 dark:text-blue-100 truncate">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-purple-50 truncate">
             {activeConversation ? activeConversation.title : 'New Cybercrime Guidance Chat'}
           </h2>
-          <p className="text-[11px] text-slate-400 dark:text-blue-300/50 hidden sm:block truncate">
+          <p className="text-[11px] text-slate-400 dark:text-purple-200/55 hidden sm:block truncate">
             Confidential & Secure AI Cybersecurity Guide
           </p>
         </div>
@@ -67,21 +67,21 @@ export default function ChatHeader() {
           href={APP_CONFIG.officialPortal}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden md:flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-slate-500 dark:text-blue-300/70 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-blue-950/40 transition-colors"
+          className="hidden md:flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-slate-500 dark:text-purple-200/70 hover:text-blue-600 dark:hover:text-purple-100 hover:bg-slate-100 dark:hover:bg-purple-950/40 transition-colors"
           title="Visit official National Cyber Crime Reporting Portal"
         >
           <span>cybercrime.gov.in</span>
           <ExternalLink className="w-3 h-3" />
         </a>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-blue-950/80 hidden sm:block" />
+        <div className="h-4 w-px bg-slate-200 dark:bg-purple-500/20 hidden sm:block" />
 
         <ThemeToggle className="hidden sm:inline-flex" />
 
         {/* New chat icon button on header */}
         <button
           onClick={createNewChat}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-blue-300/70 dark:hover:text-blue-100 hover:bg-slate-100 dark:hover:bg-blue-950/50 transition-colors"
+          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-purple-200/75 dark:hover:text-purple-100 hover:bg-slate-100 dark:hover:bg-purple-950/45 transition-colors"
           title="Start new conversation"
         >
           <Plus className="w-5 h-5" />

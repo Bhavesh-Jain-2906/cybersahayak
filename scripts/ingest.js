@@ -7,7 +7,7 @@ const { PersistentVectorStore } = require('../lib/rag/vectorStore');
 
 async function runIngestion() {
   console.log('=====================================================');
-  console.log(' CyberSahayak RAG Knowledge Base Ingestion Pipeline');
+  console.log(' Connor RAG Knowledge Base Ingestion Pipeline');
   console.log('=====================================================\n');
 
   // Step 1: Locate the PDF document

@@ -44,7 +44,7 @@ export default function ConversationItem({ conversation }) {
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-200/80 dark:bg-[#080e1c] border border-blue-500/40 shadow-cool-blue-xs text-sm">
+      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-200/80 dark:bg-[#171222]/80 border border-blue-500/40 dark:border-purple-400/40 text-sm">
         <input
           ref={inputRef}
           type="text"
@@ -54,11 +54,11 @@ export default function ConversationItem({ conversation }) {
             if (e.key === 'Enter') handleSaveRename(e);
             if (e.key === 'Escape') handleCancelRename(e);
           }}
-          className="flex-1 min-w-0 bg-transparent px-1 py-0.5 text-xs text-slate-900 dark:text-blue-100 focus:outline-none border-b border-blue-500"
+          className="flex-1 min-w-0 bg-transparent px-1 py-0.5 text-xs text-slate-900 dark:text-white focus:outline-none border-b border-blue-500 dark:border-purple-400"
         />
         <button
           onClick={handleSaveRename}
-          className="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 rounded"
+          className="p-1 text-blue-600 dark:text-purple-300 hover:text-blue-700 dark:hover:text-purple-200 rounded"
           title="Save title"
         >
           <Check className="w-3.5 h-3.5" />
@@ -104,15 +104,15 @@ export default function ConversationItem({ conversation }) {
       onClick={() => selectConversation(conversation.id)}
       className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs md:text-sm cursor-pointer transition-all duration-200 select-none border ${
         isActive
-          ? 'bg-blue-600/15 text-blue-900 dark:text-blue-300 font-medium border-blue-500/30 dark:border-blue-500/50 dark:shadow-[0_0_16px_rgba(59,130,246,0.25)]'
-          : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-[#070d1a] dark:hover:border-blue-900/40 hover:text-slate-900 dark:hover:text-blue-200'
+          ? 'bg-blue-600/15 dark:bg-[#231936]/65 text-blue-900 dark:text-white font-medium border-blue-500/30 dark:border-purple-400/30'
+          : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-white/5 dark:hover:border-white/10 hover:text-slate-900 dark:hover:text-zinc-100'
       }`}
     >
       <MessageSquare
         className={`w-4 h-4 shrink-0 transition-colors ${
           isActive
-            ? 'text-blue-600 dark:text-blue-400'
-            : 'text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-blue-400'
+            ? 'text-blue-600 dark:text-purple-300'
+            : 'text-slate-400 group-hover:text-slate-600 dark:text-zinc-500 dark:group-hover:text-purple-300'
         }`}
       />
 
@@ -131,7 +131,7 @@ export default function ConversationItem({ conversation }) {
             e.stopPropagation();
             setIsEditing(true);
           }}
-          className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-blue-300 hover:bg-slate-300/50 dark:hover:bg-blue-900/50 transition-colors"
+          className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-white/10 transition-colors"
           title="Rename chat"
         >
           <Edit3 className="w-3.5 h-3.5" />

@@ -1,23 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  ShieldAlert,
   ShieldCheck,
   Lock,
   Mail,
   User,
   Eye,
   EyeOff,
-  ArrowRight,
   Loader2,
   AlertCircle,
   CheckCircle2,
-  PhoneCall,
   KeyRound,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { APP_CONFIG } from '@/lib/constants';
+import styles from './AuthScreen.module.css';
+
+const NOIR_PURPLE_PARTICLES = [
+  { bg: '#FAF5FF', glow: 'rgba(250, 245, 255, 0.5)' }, // off-white
+  { bg: '#C084FC', glow: 'rgba(168, 85, 247, 0.5)' }, // soft amethyst purple
+  { bg: '#A855F7', glow: 'rgba(147, 51, 234, 0.45)' }, // vibrant purple
+];
 
 export default function AuthScreen() {
   const { signInWithPassword, signUpWithPassword } = useAuth();
@@ -33,12 +37,148 @@ export default function AuthScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
 
+  // Refs for scoped ambient + interactive particle effects and sphere parallax
+  const particlesContainerRef = useRef(null);
+  const sphereParallaxRefs = useRef([]);
+
+  useEffect(() => {
+    const container = particlesContainerRef.current;
+    if (!container) return undefined;
+
+    let isMounted = true;
+    const activeTimers = new Set();
+    const particleCount = 120;
+    let lastTrailTime = 0;
+
+    const scheduleTimer = (fn, delayMs) => {
+      const id = setTimeout(() => {
+        activeTimers.delete(id);
+        if (isMounted) fn();
+      }, delayMs);
+      activeTimers.add(id);
+      return id;
+    };
+
+    const applyNoirPurpleTint = (particle) => {
+      const tint = NOIR_PURPLE_PARTICLES[Math.floor(Math.random() * NOIR_PURPLE_PARTICLES.length)];
+      particle.style.background = tint.bg;
+      particle.style.boxShadow = `0 0 6px ${tint.glow}`;
+    };
+
+    const resetParticle = (particle) => {
+      const posX = Math.random() * 100;
+      const posY = Math.random() * 100;
+      particle.style.transition = 'none';
+      particle.style.left = `${posX}%`;
+      particle.style.top = `${posY}%`;
+      particle.style.opacity = '0';
+      return { x: posX, y: posY };
+    };
+
+    const animateParticle = (particle, isInitial = false) => {
+      if (!isMounted) return;
+      const pos = resetParticle(particle);
+      const duration = Math.random() * 10 + 10; // 10-20s
+      const delay = isInitial ? Math.random() * 1.5 : Math.random() * 4;
+
+      scheduleTimer(() => {
+        particle.style.transition = `all ${duration}s linear`;
+        particle.style.opacity = String(Math.random() * 0.34 + 0.18);
+
+        const moveX = pos.x + (Math.random() * 20 - 10);
+        const moveY = pos.y - Math.random() * 30;
+
+        particle.style.left = `${moveX}%`;
+        particle.style.top = `${moveY}%`;
+
+        scheduleTimer(() => {
+          animateParticle(particle, false);
+        }, duration * 1000);
+      }, delay * 1000);
+    };
+
+    // Create 120 black-noir purple/white ambient particles
+    for (let i = 0; i < particleCount; i += 1) {
+      const particle = document.createElement('div');
+      particle.className = styles.particle;
+      const size = Math.random() * 3 + 1;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      applyNoirPurpleTint(particle);
+      resetParticle(particle);
+      container.appendChild(particle);
+      animateParticle(particle, true);
+    }
+
+    // Interactive mouse-trail particles + subtle sphere parallax
+    const handleMouseMove = (e) => {
+      if (!isMounted) return;
+
+      const now = Date.now();
+      const moveX = (e.clientX / window.innerWidth - 0.5) * 14;
+      const moveY = (e.clientY / window.innerHeight - 0.5) * 14;
+
+      sphereParallaxRefs.current.forEach((layer, idx) => {
+        if (!layer) return;
+        const depthFactor = idx === 0 ? 1 : idx === 1 ? -0.8 : 0.6;
+        layer.style.transform = `translate3d(${moveX * depthFactor}px, ${moveY * depthFactor}px, 0)`;
+      });
+
+      if (now - lastTrailTime < 28 || container.childElementCount > 185) {
+        return;
+      }
+      lastTrailTime = now;
+
+      const mouseX = (e.clientX / window.innerWidth) * 100;
+      const mouseY = (e.clientY / window.innerHeight) * 100;
+
+      const trailParticle = document.createElement('div');
+      trailParticle.className = styles.particle;
+      const size = Math.random() * 4 + 2;
+      trailParticle.style.width = `${size}px`;
+      trailParticle.style.height = `${size}px`;
+      applyNoirPurpleTint(trailParticle);
+      trailParticle.style.left = `${mouseX}%`;
+      trailParticle.style.top = `${mouseY}%`;
+      trailParticle.style.opacity = '0.6';
+      container.appendChild(trailParticle);
+
+      scheduleTimer(() => {
+        trailParticle.style.transition = 'all 2s ease-out';
+        trailParticle.style.left = `${mouseX + (Math.random() * 10 - 5)}%`;
+        trailParticle.style.top = `${mouseY + (Math.random() * 10 - 5)}%`;
+        trailParticle.style.opacity = '0';
+
+        scheduleTimer(() => {
+          trailParticle.remove();
+        }, 2000);
+      }, 10);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    return () => {
+      isMounted = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      activeTimers.forEach((id) => clearTimeout(id));
+      activeTimers.clear();
+      container.innerHTML = '';
+    };
+  }, []);
+
   // Auto-clear error when user modifies any input
   const handleInputChange = (setter) => (e) => {
     setter(e.target.value);
     if (errorMessage) {
       setErrorMessage('');
     }
+  };
+
+  // Switch between login and registration cleanly
+  const switchMode = (targetMode) => {
+    setMode(targetMode);
+    setErrorMessage('');
+    setSuccessNotice('');
   };
 
   // Validate and submit form
@@ -125,226 +265,333 @@ export default function AuthScreen() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-start sm:justify-center p-3 sm:p-6 py-6 sm:py-10 bg-slate-950 text-slate-100 selection:bg-blue-600/30 selection:text-blue-200 relative overflow-y-auto">
-      {/* Background glowing gradients */}
-      <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="fixed bottom-10 right-10 w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Main Container with vertical auto centering */}
-      <div className="w-full max-w-md my-auto relative z-10 animate-fade-in">
-        {/* Brand Header */}
-        <div className="text-center mb-4 sm:mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 text-white shadow-cool-blue mb-2.5">
-            <ShieldAlert className="w-6 h-6 sm:w-7 sm:h-7" />
-          </div>
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              CyberSahayak
-            </h1>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-[0_0_8px_rgba(59,130,246,0.2)]">
-              AI Guide
-            </span>
-          </div>
-          <p className="text-xs text-blue-300/60 max-w-xs mx-auto">
-            Secure Cybercrime Guidance, Threat Awareness & Incident Response Platform
-          </p>
+    <div className={`${styles.authRoot} selection:bg-[#9333EA]/35 selection:text-[#F3E8FF]`}>
+      {/* Scoped 5-Layer Black Primary + Purple Secondary Animated Background */}
+      <div className={styles.gradientBackground} aria-hidden="true">
+        <div
+          ref={(el) => {
+            sphereParallaxRefs.current[0] = el;
+          }}
+          className={styles.sphereParallax}
+        >
+          <div className={`${styles.gradientSphere} ${styles.sphere1}`} />
         </div>
+        <div
+          ref={(el) => {
+            sphereParallaxRefs.current[1] = el;
+          }}
+          className={styles.sphereParallax}
+        >
+          <div className={`${styles.gradientSphere} ${styles.sphere2}`} />
+        </div>
+        <div
+          ref={(el) => {
+            sphereParallaxRefs.current[2] = el;
+          }}
+          className={styles.sphereParallax}
+        >
+          <div className={`${styles.gradientSphere} ${styles.sphere3}`} />
+        </div>
+        <div className={styles.glow} />
+        <div className={styles.gridOverlay} />
+        <div className={styles.noiseOverlay} />
+        <div ref={particlesContainerRef} className={styles.particlesContainer} />
+      </div>
 
-        {/* Card Box */}
-        <div className="rounded-2xl bg-[#030612]/95 border border-blue-950/80 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(37,99,235,0.15)] p-5 sm:p-7 backdrop-blur-xl">
-          {/* Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-900/80 border border-blue-950/60 mb-4 sm:mb-5">
-            <button
-              type="button"
-              onClick={() => {
-                setMode('login');
-                setErrorMessage('');
-                setSuccessNotice('');
-              }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                mode === 'login'
-                  ? 'bg-blue-600 text-white shadow-cool-blue-xs'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode('register');
-                setErrorMessage('');
-                setSuccessNotice('');
-              }}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                mode === 'register'
-                  ? 'bg-blue-600 text-white shadow-cool-blue-xs'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Create Account
-            </button>
-          </div>
-
-          {/* Success Banner */}
-          {successNotice && (
-            <div className="mb-3.5 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5 animate-fade-in">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>{successNotice}</span>
+      {/* Main Responsive Split-Screen Content */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-6 sm:py-10 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
+          {/* Left Column: Cool-Purple Editorial Hero, Summary & Minimal Stat Bar */}
+          <div className="order-1 lg:col-span-7 lg:self-start lg:pt-2 lg:pr-8 text-center lg:text-left animate-fade-in">
+            {/* Minimal Eyebrow Tag */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#9333EA]/[0.12] border border-[#A855F7]/25 backdrop-blur-md mb-6 sm:mb-7">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C084FC] animate-pulse" />
+              <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-[#E9D5FF]">
+                AI Cybercrime Guidance Platform
+              </span>
             </div>
-          )}
 
-          {/* Error Banner */}
-          {errorMessage && (
-            <div className="mb-3.5 p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs flex items-start gap-2.5 animate-fade-in">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
+            <h1 className={`text-5xl sm:text-6xl lg:text-[4.25rem] xl:text-[4.75rem] font-extrabold tracking-tight leading-[1.05] ${styles.heroHeading}`}>
+              {APP_CONFIG.name}
+            </h1>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            {mode === 'register' && (
+            {/* Subtle cool-purple horizontal accent rule */}
+            <div className="w-20 h-[2px] rounded-full bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-transparent mx-auto lg:mx-0 my-6 sm:my-7" />
+
+            <p className={`text-lg sm:text-xl xl:text-[1.35rem] font-normal max-w-2xl mx-auto lg:mx-0 leading-[1.7] ${styles.heroSummary}`}>
+              Calm, intelligent cybercrime triage built for speed and trust. Navigate UPI fraud,
+              phishing threats, and compromised accounts with step-by-step guidance grounded in
+              Indian cyber law—keeping your conversations private and your credentials strictly yours.
+            </p>
+
+            {/* Clean Hairline-Separated Metric Strip (Visible on sm+ & Desktop) */}
+            <div className="mt-8 sm:mt-10 pt-6 border-t border-[#A855F7]/15 hidden sm:flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-10 max-w-2xl mx-auto lg:mx-0">
               <div>
-                <label className="block text-xs font-medium text-blue-200/80 mb-1">
-                  Full Name
-                </label>
-                <div className="relative flex items-center">
-                  <User className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={handleInputChange(setName)}
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                  />
+                <div className="text-lg sm:text-xl font-bold text-[#E9D5FF] tracking-tight">53+</div>
+                <div className="text-[11px] text-[#A1A1AA] uppercase tracking-wider mt-0.5">
+                  IT Act Provisions
                 </div>
               </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-medium text-blue-200/80 mb-1">
-                Email Address
-              </label>
-              <div className="relative flex items-center">
-                <Mail className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
-                <input
-                  type="text"
-                  value={email}
-                  onChange={handleInputChange(setEmail)}
-                  placeholder="your.email@example.com"
-                  autoComplete="email"
-                  className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                />
+              <div className="hidden sm:block h-7 w-px bg-[#A855F7]/20" />
+              <div>
+                <div className="text-lg sm:text-xl font-bold text-[#E9D5FF] tracking-tight">6-Stage</div>
+                <div className="text-[11px] text-[#A1A1AA] uppercase tracking-wider mt-0.5">
+                  LangGraph Triage
+                </div>
+              </div>
+              <div className="hidden sm:block h-7 w-px bg-[#A855F7]/20" />
+              <div>
+                <div className="text-lg sm:text-xl font-bold text-[#C084FC] tracking-tight">1930</div>
+                <div className="text-[11px] text-[#A1A1AA] uppercase tracking-wider mt-0.5">
+                  Golden Hour Ready
+                </div>
               </div>
             </div>
+          </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-blue-200/80">
-                  Password
-                </label>
-                {password.length > 0 && (
-                  <span
-                    className={`text-[10px] font-mono ${
-                      password.length >= 6 ? 'text-emerald-400' : 'text-amber-400'
-                    }`}
-                  >
-                    {password.length >= 6
-                      ? `✓ ${password.length} chars (valid)`
-                      : `${password.length}/6 chars (min 6)`}
-                  </span>
-                )}
+          {/* Right Column: Translucent Matte Card with Subtle Purple Tint & Visible Particles */}
+          <div className="order-2 lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none animate-fade-in">
+            <div className="relative overflow-hidden rounded-[14px] bg-gradient-to-b from-[#171320]/[0.45] to-[#111016]/[0.52] border border-[#A855F7]/25 shadow-[0_20px_50px_rgba(0,0,0,0.72),0_0_40px_rgba(147,51,234,0.08)] p-6 sm:p-7">
+              {/* Subtle top hairline & soft corner ambient wash inside the card */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#C084FC]/55 to-transparent"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[#9333EA]/[0.12] blur-3xl"
+              />
+              {/* Editorial Header Microcopy */}
+              <div className="relative mb-5">
+                <h2 className="text-lg sm:text-xl font-semibold text-white tracking-[-0.02em]">
+                  {mode === 'login' ? 'Welcome back' : 'Create your safe space'}
+                </h2>
+                <p className="text-xs text-[#A1A1AA] mt-1">
+                  {mode === 'login'
+                    ? 'Pick up right where you left off in your private cyber guidance hub.'
+                    : 'Set up an isolated account to save guidance threads and checkup progress.'}
+                </p>
               </div>
-              <div className="relative flex items-center">
-                <Lock className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={handleInputChange(setPassword)}
-                  placeholder={mode === 'register' ? 'Minimum 6 characters' : 'Enter your password'}
-                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                  className="w-full pl-10 pr-10 py-2 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                />
+
+              {/* Segmented Tab Switcher (Translucent Dark Recess + Subtle Plum Active Tab) */}
+              <div className="relative grid grid-cols-2 p-1 rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.08] mb-5">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-blue-300 transition-colors p-1"
+                  onClick={() => switchMode('login')}
+                  className={`py-2 text-xs rounded-[6px] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 ${
+                    mode === 'login'
+                      ? 'bg-[#261E35]/75 text-white font-semibold border border-[#A855F7]/30'
+                      : 'text-[#A1A1AA] hover:text-white font-medium border border-transparent'
+                  }`}
                 >
-                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchMode('register')}
+                  className={`py-2 text-xs rounded-[6px] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 ${
+                    mode === 'register'
+                      ? 'bg-[#261E35]/75 text-white font-semibold border border-[#A855F7]/30'
+                      : 'text-[#A1A1AA] hover:text-white font-medium border border-transparent'
+                  }`}
+                >
+                  Create Account
                 </button>
               </div>
-            </div>
 
-            {mode === 'register' && (
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-medium text-blue-200/80">
-                    Confirm Password
-                  </label>
-                  {confirmPassword.length > 0 && (
-                    <span
-                      className={`text-[10px] font-mono ${
-                        password === confirmPassword ? 'text-emerald-400' : 'text-amber-400'
-                      }`}
-                    >
-                      {password === confirmPassword ? '✓ Passwords match' : 'Must match password'}
-                    </span>
-                  )}
+              {/* Success Banner */}
+              {successNotice && (
+                <div className="mb-3.5 p-3 rounded-[8px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5 animate-fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>{successNotice}</span>
                 </div>
-                <div className="relative flex items-center">
-                  <KeyRound className="w-4 h-4 absolute left-3.5 text-blue-400/60 pointer-events-none" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={handleInputChange(setConfirmPassword)}
-                    placeholder="Re-enter your password"
-                    autoComplete="new-password"
-                    className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-[#060a17] border border-blue-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                  />
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-cool-blue hover:shadow-cool-blue-lg active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{mode === 'login' ? 'Authenticating...' : 'Creating Account...'}</span>
-                </>
-              ) : (
-                <>
-                  <span>{mode === 'login' ? 'Sign In to CyberSahayak' : 'Create Protected Account'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
               )}
-            </button>
-          </form>
 
+              {/* Error Banner */}
+              {errorMessage && (
+                <div className="mb-3.5 p-3 rounded-[8px] bg-red-500/15 border border-red-500/35 text-red-200 text-xs flex items-start gap-2.5 animate-fade-in">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
-          {/* Privacy & RLS Assurance */}
-          <div className="mt-4 pt-3.5 border-t border-blue-950/60 flex items-center justify-between text-[11px] text-blue-300/50">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-              <span>Row-Level Security Active</span>
-            </span>
-            <span>Zero FIR Drafting</span>
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {mode === 'register' && (
+                  <div>
+                    <label
+                      htmlFor="auth-name"
+                      className="block text-xs font-medium text-white mb-1.5"
+                    >
+                      Full Name
+                    </label>
+                    <div className="relative flex items-center">
+                      <User className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                      <input
+                        id="auth-name"
+                        type="text"
+                        value={name}
+                        onChange={handleInputChange(setName)}
+                        placeholder="e.g. Rahul Sharma"
+                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="auth-email"
+                    className="block text-xs font-medium text-white mb-1.5"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative flex items-center">
+                    <Mail className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                    <input
+                      id="auth-email"
+                      type="text"
+                      value={email}
+                      onChange={handleInputChange(setEmail)}
+                      placeholder="your.email@example.com"
+                      autoComplete="email"
+                      className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label
+                      htmlFor="auth-password"
+                      className="block text-xs font-medium text-white"
+                    >
+                      Password
+                    </label>
+                    {password.length > 0 && (
+                      <span
+                        className={`text-[10px] font-mono ${
+                          password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                        }`}
+                      >
+                        {password.length >= 6
+                          ? `✓ ${password.length} chars (valid)`
+                          : `${password.length}/6 chars (min 6)`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative flex items-center">
+                    <Lock className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                    <input
+                      id="auth-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={handleInputChange(setPassword)}
+                      placeholder={mode === 'register' ? 'Minimum 6 characters' : 'Enter your password'}
+                      autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                      className="w-full pl-10 pr-10 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 text-[#A1A1AA] hover:text-[#D8B4FE] transition-colors p-1 focus:outline-none focus-visible:text-[#D8B4FE]"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#71717A] mt-1.5">
+                    {mode === 'login'
+                      ? 'Encrypted Supabase session • Never share banking OTPs or PINs.'
+                      : 'Use a strong, unique password with at least 6 characters.'}
+                  </p>
+                </div>
+
+                {mode === 'register' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label
+                        htmlFor="auth-confirm-password"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Confirm Password
+                      </label>
+                      {confirmPassword.length > 0 && (
+                        <span
+                          className={`text-[10px] font-mono ${
+                            password === confirmPassword ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                          }`}
+                        >
+                          {password === confirmPassword ? '✓ Passwords match' : 'Must match password'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative flex items-center">
+                      <KeyRound className="w-4 h-4 absolute left-3.5 text-[#71717A] pointer-events-none" />
+                      <input
+                        id="auth-confirm-password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={handleInputChange(setConfirmPassword)}
+                        placeholder="Re-enter your password"
+                        autoComplete="new-password"
+                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-[8px] bg-[#0D0B12]/55 border border-white/[0.12] text-white placeholder-[#71717A] focus:outline-none focus:ring-0 focus:border-[#A855F7]/65 transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full mt-2 flex items-center justify-center gap-2 h-[42px] px-4 rounded-[8px] bg-[#F4F4F5] hover:bg-[#FAF5FF] text-[#09090B] font-medium text-xs sm:text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-[#09090B]" />
+                      <span>{mode === 'login' ? 'Verifying Session...' : 'Setting Up Workspace...'}</span>
+                    </>
+                  ) : (
+                    <span>{mode === 'login' ? 'Continue to Workspace' : 'Create Protected Account'}</span>
+                  )}
+                </button>
+              </form>
+
+              {/* Clean Monochrome Switch Link with Subtle Purple Accent */}
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+                  className="text-xs text-[#A1A1AA] hover:text-white transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C084FC]/50 rounded px-1"
+                >
+                  {mode === 'login' ? (
+                    <>
+                      New here?{' '}
+                      <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                        Create an account
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{' '}
+                      <span className="text-[#C084FC] hover:text-[#D8B4FE] font-medium underline-offset-4 hover:underline transition-colors">
+                        Sign in instead
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Privacy & RLS Assurance */}
+              <div className="mt-4 pt-3.5 border-t border-white/[0.08] flex items-center justify-between text-[11px] text-[#A1A1AA]">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#C084FC]" />
+                  <span>Row-Level Security Active</span>
+                </span>
+                <span>Zero FIR Drafting</span>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Emergency National Helpline Badge */}
-        <div className="mt-4 text-center pb-4">
-          <a
-            href={`tel:${APP_CONFIG.nationalHelpline}`}
-            className="inline-flex items-center gap-1.5 text-xs text-amber-400/80 hover:text-amber-300 transition-colors"
-          >
-            <PhoneCall className="w-3.5 h-3.5" />
-            <span>Under active attack? Call <strong>1930</strong> National Helpline immediately</span>
-          </a>
         </div>
       </div>
     </div>

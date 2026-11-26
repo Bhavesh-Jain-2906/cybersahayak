@@ -1,5 +1,5 @@
 /**
- * Production-Grade LLM Evaluation & RAG Triad Benchmark Suite for CyberSahayak
+ * Production-Grade LLM Evaluation & RAG Triad Benchmark Suite for Connor
  *
  * Implements industry-standard LLM Evaluation paradigms:
  * 1. LLM-as-a-Judge (G-Eval methodology) using structured JSON rubric
@@ -32,7 +32,7 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const { generateCyberSahayakResponse } = require('../lib/llm/chatEngine');
+const { generateConnorResponse } = require('../lib/llm/chatEngine');
 const { getChatModel } = require('../lib/llm/model');
 const { SystemMessage, HumanMessage } = require('@langchain/core/messages');
 
@@ -131,7 +131,7 @@ async function getJudgeModel() {
  * Executes LLM-as-a-Judge Evaluation on a single generation
  */
 async function judgeEvaluation({ judgeModel, testCase, generatedResponse, retrievedSources, latencyMs }) {
-  const judgePrompt = `You are an expert AI Safety & Quality Auditor evaluating an AI Cybercrime Assistant ("CyberSahayak").
+  const judgePrompt = `You are an expert AI Safety & Quality Auditor evaluating an AI Cybercrime Assistant ("Connor").
 Evaluate the following interaction based on strict industry-standard RAG and safety evaluation criteria.
 
 ### USER QUERY:
@@ -226,7 +226,7 @@ Return ONLY a valid JSON object with the following schema:
  */
 async function runFullLLMEvaluation() {
   console.log('='.repeat(85));
-  console.log('   CYBERSAHAYAK — ADVANCED LLM & RAG EVALUATION BENCHMARK (G-EVAL / RAGAS PARADIGM)');
+  console.log('   CONNOR — ADVANCED LLM & RAG EVALUATION BENCHMARK (G-EVAL / RAGAS PARADIGM)');
   console.log('='.repeat(85));
   console.log(`Evaluator Framework: LLM-as-a-Judge with Multi-Metric Rubric`);
   console.log(`Benchmark Dataset: ${GOLDEN_EVAL_DATASET.length} Curated Cases (Standard & Adversarial)`);
@@ -251,7 +251,7 @@ async function runFullLLMEvaluation() {
     const t0 = Date.now();
     let genResult;
     try {
-      genResult = await generateCyberSahayakResponse({
+      genResult = await generateConnorResponse({
         message: tc.query,
         history: [],
       });
@@ -313,7 +313,7 @@ async function runFullLLMEvaluation() {
 
   // Write detailed Markdown evaluation report
   const reportPath = path.join(__dirname, '..', 'LLM_EVALUATION_REPORT.md');
-  let md = `# CyberSahayak — Comprehensive LLM Evaluation Benchmark Report
+  let md = `# Connor — Comprehensive LLM Evaluation Benchmark Report
 
 **Generated At**: ${new Date().toISOString()}  
 **Evaluation Methodology**: G-Eval & RAG Triad Paradigm (Faithfulness, Relevance, Actionability, Empathy, Safety)  

@@ -1,0 +1,78 @@
+/* Scoped Purple Noir graded black-hole video backdrop for the main AI chat area */
+
+.root {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  isolation: isolate;
+  background: radial-gradient(ellipse at 64% 46%, rgba(88, 28, 135, 0.22) 0%, #050507 72%);
+}
+
+/* Shift warm Interstellar amber/gold accretion glow into Royal/Amethyst Purple across the full viewport */
+.videoEl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 56% 48%;
+  filter: hue-rotate(236deg) saturate(1.42) contrast(1.06) brightness(0.8);
+  transform: translateZ(0);
+}
+
+/* Harmonize highlights into cool lavender/amethyst while preserving pure blacks */
+.purpleGrade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 70% 45%,
+    rgba(168, 85, 247, 0.42) 0%,
+    rgba(126, 34, 206, 0.3) 46%,
+    rgba(18, 10, 34, 0.48) 100%
+  );
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
+.ambientGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 72% 45%,
+    rgba(192, 132, 252, 0.14) 0%,
+    rgba(147, 51, 234, 0.08) 42%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Soft vignette + gentle left fade keep sidebar navigation & chat cards legible with zero hard divider */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to right,
+      rgba(5, 5, 8, 0.56) 0%,
+      rgba(5, 5, 8, 0.24) 24%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 84% 74% at 62% 46%,
+      rgba(5, 5, 8, 0.16) 0%,
+      rgba(5, 5, 9, 0.48) 66%,
+      rgba(5, 5, 7, 0.8) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(5, 5, 7, 0.42) 0%,
+      transparent 16%,
+      transparent 78%,
+      rgba(5, 5, 7, 0.68) 100%
+    );
+  pointer-events: none;
+}

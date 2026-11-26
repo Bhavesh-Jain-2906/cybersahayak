@@ -97,7 +97,7 @@ export default function SettingsModal() {
     downloadAnchor.setAttribute('href', dataStr);
     downloadAnchor.setAttribute(
       'download',
-      `cybersahayak-chats-${new Date().toISOString().slice(0, 10)}.json`
+      `connor-chats-${new Date().toISOString().slice(0, 10)}.json`
     );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
@@ -493,7 +493,7 @@ export default function SettingsModal() {
                 <div className="flex items-center gap-2">
                   <Cpu className="w-4 h-4 text-blue-400" />
                   <span className="font-semibold text-slate-800 dark:text-blue-100">
-                    CyberSahayak Architecture
+                    Connor Architecture
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -572,7 +572,7 @@ export default function SettingsModal() {
         {/* Footer */}
         <div className="px-5 py-3 border-t border-slate-200 dark:border-blue-950/70 bg-slate-50 dark:bg-[#020409] flex items-center justify-between text-[11px] text-slate-400 dark:text-blue-300/40">
           <div className="flex items-center gap-2">
-            <span>CyberSahayak v{APP_CONFIG.version}</span>
+            <span>Connor v{APP_CONFIG.version}</span>
             <span className="w-1 h-1 rounded-full bg-blue-500" />
             <span>RLS Protected</span>
           </div>

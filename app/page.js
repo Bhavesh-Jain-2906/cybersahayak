@@ -11,6 +11,7 @@ import ResourcesView from '@/components/resources/ResourcesView';
 import AdminConsoleView from '@/components/admin/AdminConsoleView';
 import SettingsModal from '@/components/modals/SettingsModal';
 import AuthScreen from '@/components/auth/AuthScreen';
+import BlackHoleBackground from '@/components/chat/BlackHoleBackground';
 import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -30,7 +31,7 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-2 text-sm text-blue-200">
           <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-          <span>Verifying CyberSahayak secure session...</span>
+          <span>Verifying Connor secure session...</span>
         </div>
       </div>
     );
@@ -43,12 +44,15 @@ export default function HomePage() {
 
   // Authenticated application
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-100 selection:bg-blue-600/30 selection:text-blue-200">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#050507] text-slate-900 dark:text-slate-100 selection:bg-purple-600/30 selection:text-purple-100">
+      {/* Full-viewport Purple Noir black-hole video spans behind both Sidebar & Chat on the main AI view */}
+      {activeView === 'chat' && <BlackHoleBackground />}
+
       {/* Left Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <main className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
         {activeView === 'chat' && <ChatArea />}
         {activeView === 'dashboard' && <DashboardView />}
         {activeView === 'awareness' && <AwarenessView />}

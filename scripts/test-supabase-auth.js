@@ -1,5 +1,5 @@
 /**
- * CyberSahayak Supabase Multi-User Auth & RLS Verification Test
+ * Connor Supabase Multi-User Auth & RLS Verification Test
  *
  * Tests:
  * 1. User registration & authentication with email/password
@@ -49,7 +49,7 @@ const userB_pass = `Pass_B_${runId}!123`;
 
 async function runTests() {
   console.log('====================================================');
-  console.log(' CyberSahayak Multi-User Auth & RLS Isolation Tests');
+  console.log(' Connor Multi-User Auth & RLS Isolation Tests');
   console.log('====================================================\n');
 
   // Client A

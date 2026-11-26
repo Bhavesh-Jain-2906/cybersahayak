@@ -57,7 +57,7 @@ export default function DashboardView() {
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-xs font-semibold mb-3">
               <ShieldCheck className="w-3.5 h-3.5 text-blue-200" />
-              <span>CyberSahayak Protection Hub</span>
+              <span>Connor Protection Hub</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Welcome back, {profileSettings.displayName || 'Digital Citizen'}
@@ -155,7 +155,7 @@ export default function DashboardView() {
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4 text-blue-500" />
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-              Quick Ask CyberSahayak AI
+              Quick Ask Connor AI
             </h3>
           </div>
           <form onSubmit={handleQuickSubmit} className="flex gap-2">

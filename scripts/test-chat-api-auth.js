@@ -1,5 +1,5 @@
 /**
- * CyberSahayak API Endpoint Auth & RLS Guardrail Verification
+ * Connor API Endpoint Auth & RLS Guardrail Verification
  *
  * Tests:
  * 1. Unauthenticated request to /api/chat -> 401 Unauthorized
@@ -32,7 +32,7 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 async function runApiAuthTests() {
   console.log('====================================================');
-  console.log(' CyberSahayak /api/chat Endpoint Security Tests');
+  console.log(' Connor /api/chat Endpoint Security Tests');
   console.log('====================================================\n');
 
   const clientA = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

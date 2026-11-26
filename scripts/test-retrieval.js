@@ -3,7 +3,7 @@ const { retrieveLegalContext, formatRetrievedContext } = require('../lib/rag/ret
 
 async function testRetrieval() {
   console.log('=====================================================');
-  console.log(' CyberSahayak RAG Semantic Retrieval Verification ');
+  console.log(' Connor RAG Semantic Retrieval Verification ');
   console.log('=====================================================\n');
 
   const testQueries = [
