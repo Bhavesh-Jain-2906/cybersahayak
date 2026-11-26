@@ -10,7 +10,6 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
-  Cpu,
 } from 'lucide-react';
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
 import { formatMessageTime } from '@/lib/dateUtils';
@@ -29,7 +28,6 @@ function AssistantMessage({ message }) {
 
   const hasSources = Boolean(message?.retrievedSources && message.retrievedSources.length > 0);
   const isDemo = Boolean(message?.metadata?.isDemo);
-  const modelName = message?.metadata?.model;
 
   return (
     <div className="group flex justify-start gap-3 px-4 py-3 md:px-6">
@@ -54,13 +52,6 @@ function AssistantMessage({ message }) {
             <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/10 dark:bg-purple-500/15 text-indigo-600 dark:text-purple-200 border border-indigo-500/20 dark:border-purple-400/25 font-medium">
               <BookOpen className="w-2.5 h-2.5 text-indigo-400 dark:text-purple-300" />
               RAG Verified
-            </span>
-          )}
-
-          {modelName && !isDemo && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-slate-500/10 dark:bg-white/5 text-slate-500 dark:text-zinc-400 font-mono">
-              <Cpu className="w-2.5 h-2.5" />
-              {modelName}
             </span>
           )}
 
