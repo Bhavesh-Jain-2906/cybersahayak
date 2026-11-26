@@ -6,7 +6,6 @@ import { getUserProfile, updateUserProfile } from '@/lib/supabase/db';
 
 const AuthContext = createContext(null);
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GMAIL_REGEX = /^[^\s@]+@(gmail|googlemail)\.com$/i;
 
 function resolveDisplayName(authUser) {
@@ -148,17 +147,164 @@ export function AuthProvider({ children }) {
     };
   }, [supabase, refreshProfile]);
 
-  // Sign In with email and password
+  // Request a real Gmail OTP from the backend (/api/auth/otp/send)
+  const requestAuthOtp = useCallback(async ({ purpose, email, password, name }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+    const cleanName = (name || '').trim();
+
+    if (!cleanEmail) {
+      return { success: false, error: 'Gmail address is required.' };
+    }
+    if (!GMAIL_REGEX.test(cleanEmail)) {
+      return {
+        success: false,
+        error: 'Please enter a valid @gmail.com address (or use Continue with Google).',
+      };
+    }
+
+    try {
+      const response = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          purpose,
+          email: cleanEmail,
+          password: cleanPassword,
+          name: cleanName,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        return {
+          success: false,
+          needsEmailConfig: Boolean(payload?.needsEmailConfig),
+          error: payload?.error || 'Could not send Gmail verification OTP.',
+        };
+      }
+
+      return {
+        success: true,
+        otpRequired: true,
+        otpType: payload.otpType,
+        otpLength: payload.otpLength || 8,
+        email: payload.email || cleanEmail,
+        message: payload.message,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: err?.message || 'Network error while requesting Gmail OTP.',
+      };
+    }
+  }, []);
+
+  // Verify the OTP sent to Gmail and complete sign-in / signup session
+  const verifyEmailOtp = useCallback(async ({ email, otp, otpType, name }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanOtp = String(otp || '').replace(/\s+/g, '').trim();
+
+    if (!cleanOtp || !/^\d{6,8}$/.test(cleanOtp)) {
+      return { success: false, error: 'Please enter the verification OTP code sent to your Gmail.' };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanOtp,
+        type: otpType || 'email',
+      });
+
+      if (error || !data?.session || !data?.user) {
+        return {
+          success: false,
+          error: error?.message || 'Invalid or expired OTP code. Please double-check your Gmail inbox.',
+        };
+      }
+
+      setIsRecoveryMode(false);
+      setUser(data.user);
+      setSession(data.session);
+
+      const resolvedName = (name || '').trim() || resolveDisplayName(data.user);
+      try {
+        await supabase.from('profiles').upsert(
+          {
+            id: data.user.id,
+            name: resolvedName,
+            email: data.user.email || cleanEmail,
+          },
+          { onConflict: 'id' }
+        );
+      } catch {}
+
+      refreshProfile(data.user.id, data.user);
+      return { success: true, user: data.user, session: data.session };
+    } catch (err) {
+      return { success: false, error: err?.message || 'Failed to verify OTP code.' };
+    }
+  }, [supabase, refreshProfile]);
+
+  // Complete password reset using Gmail OTP + new password (/api/auth/reset-password)
+  const completePasswordResetWithOtp = useCallback(async ({ email, otp, newPassword }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanOtp = String(otp || '').replace(/\s+/g, '').trim();
+    const cleanPassword = (newPassword || '').trim();
+
+    if (!cleanEmail || !GMAIL_REGEX.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid @gmail.com address.' };
+    }
+    if (!cleanOtp || !/^\d{6,8}$/.test(cleanOtp)) {
+      return { success: false, error: 'Please enter the reset OTP code sent to your Gmail.' };
+    }
+    if (!cleanPassword || cleanPassword.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters long.' };
+    }
+
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: cleanEmail,
+          otp: cleanOtp,
+          newPassword: cleanPassword,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        return {
+          success: false,
+          error: payload?.error || 'Could not reset password. Please check your OTP code.',
+        };
+      }
+
+      return {
+        success: true,
+        message: payload.message || 'Password updated successfully! You can now sign in.',
+      };
+    } catch (err) {
+      return { success: false, error: err?.message || 'Network error while updating password.' };
+    }
+  }, []);
+
+  // Sign In with email and password:
+  // All users authenticate via Supabase email + OTP
   const signInWithPassword = useCallback(async ({ email, password }) => {
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPassword = (password || '').trim();
 
     {
       if (!cleanEmail) {
-        return { success: false, error: 'Email address is required.' };
+        return { success: false, error: 'Gmail address username is required.' };
       }
-      if (!EMAIL_REGEX.test(cleanEmail)) {
-        return { success: false, error: 'Please enter a valid Gmail address (e.g. name@gmail.com).' };
+      if (!GMAIL_REGEX.test(cleanEmail)) {
+        return {
+          success: false,
+          error: 'Please enter a valid @gmail.com address to receive your sign-in OTP.',
+        };
       }
       if (!cleanPassword) {
         return { success: false, error: 'Password is required.' };
@@ -166,230 +312,49 @@ export function AuthProvider({ children }) {
       if (cleanPassword.length < 6) {
         return { success: false, error: 'Password must be at least 6 characters long.' };
       }
-    }
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      return requestAuthOtp({
+        purpose: 'login',
         email: cleanEmail,
         password: cleanPassword,
       });
-
-      if (error) {
-        let msg = error.message;
-        const needsEmailConfirmation = msg.includes('Email not confirmed');
-        if (msg.includes('Invalid login credentials')) {
-          msg = 'Invalid credentials. Please verify your Gmail and password.';
-        } else if (needsEmailConfirmation) {
-          msg = 'Your Gmail address is not verified yet. Please click the verification link in your inbox or resend it below.';
-        }
-        return { success: false, error: msg, needsEmailConfirmation, email: cleanEmail };
-      }
-
-      setIsRecoveryMode(false);
-      setUser(data.user);
-      setSession(data.session);
-      if (data.user) {
-        refreshProfile(data.user.id, data.user);
-      }
-      return { success: true, user: data.user, session: data.session };
-    } catch (err) {
-      return { success: false, error: err.message || 'An unexpected error occurred during sign in.' };
-    }
-  }, [supabase, refreshProfile]);
-
-  // Sign In / Sign Up via real Google (Gmail) OAuth
-  const signInWithGoogle = useCallback(async () => {
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      // Preflight provider check so users aren't stranded on a raw GoTrue error JSON page
-      if (supabaseUrl && supabaseAnonKey) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000);
-          const settingsRes = await fetch(`${supabaseUrl}/auth/v1/settings`, {
-            headers: { apikey: supabaseAnonKey },
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (settingsRes.ok) {
-            const settings = await settingsRes.json();
-            if (settings?.external?.google === false) {
-              return {
-                success: false,
-                providerNotEnabled: true,
-                error:
-                  'Google Sign-In is not enabled in Supabase yet. Enable Google under Authentication → Providers in your Supabase Dashboard, or sign in with your Gmail & password below.',
-              };
-            }
-          }
-        } catch {
-          // If preflight check fails due to transient network error, let signInWithOAuth proceed normally
-        }
-      }
-
-      const redirectTo = `${window.location.origin}/auth/callback`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
-        },
-      });
-
-      if (error) {
-        return { success: false, error: formatSupabaseAuthError(error.message) };
-      }
-
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err.message || 'Unable to launch Google Sign-In.' };
     }
   }, [supabase]);
 
-  // Sign Up with real Gmail and password
+  // Sign Up always dispatches a real Gmail OTP and never creates an active unverified session
   const signUpWithPassword = useCallback(async ({ name, email, password }) => {
     const cleanName = (name || '').trim();
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPassword = (password || '').trim();
 
-    if (!cleanName) {
-      return { success: false, error: 'Full name is required.' };
+    if (!cleanName || cleanName.length < 2) {
+      return { success: false, error: 'Full name must be at least 2 characters long.' };
     }
-    if (!cleanEmail) {
-      return { success: false, error: 'Gmail address is required.' };
-    }
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      return { success: false, error: 'Please enter a valid Gmail address.' };
-    }
-    if (!GMAIL_REGEX.test(cleanEmail)) {
+    if (!cleanEmail || !GMAIL_REGEX.test(cleanEmail)) {
       return {
         success: false,
-        error: 'Please register with a valid @gmail.com address, or click Continue with Google.',
+        error: 'Please register with a valid @gmail.com address.',
       };
     }
-    if (!cleanPassword) {
-      return { success: false, error: 'Password is required.' };
-    }
-    if (cleanPassword.length < 6) {
+    if (!cleanPassword || cleanPassword.length < 6) {
       return { success: false, error: 'Password must be at least 6 characters long.' };
     }
 
-    try {
-      const emailRedirectTo = `${window.location.origin}/auth/callback`;
-      const { data, error } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password: cleanPassword,
-        options: {
-          emailRedirectTo,
-          data: {
-            name: cleanName,
-            role: 'user',
-          },
-        },
-      });
+    return requestAuthOtp({
+      purpose: 'signup',
+      name: cleanName,
+      email: cleanEmail,
+      password: cleanPassword,
+    });
+  }, [requestAuthOtp]);
 
-      if (error) {
-        return { success: false, error: formatSupabaseAuthError(error.message) };
-      }
-
-      // When email confirmation is enabled, Supabase returns an empty identities array for duplicate signups
-      if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-        return {
-          success: false,
-          error: 'An account with this Gmail already exists. Try signing in or using Forgot Password.',
-        };
-      }
-
-      if (data.session) {
-        setUser(data.user);
-        setSession(data.session);
-        try {
-          await supabase.from('profiles').upsert({
-            id: data.user.id,
-            name: cleanName,
-            email: cleanEmail,
-          });
-        } catch {}
-        refreshProfile(data.user.id, data.user);
-        return { success: true, user: data.user, session: data.session };
-      }
-
-      return {
-        success: true,
-        requiresEmailVerification: true,
-        email: cleanEmail,
-        user: data.user,
-        message: `Verification link sent to ${cleanEmail}. Check your Gmail inbox to activate your account, then sign in.`,
-      };
-    } catch (err) {
-      return { success: false, error: err.message || 'An unexpected error occurred during sign up.' };
-    }
-  }, [supabase, refreshProfile]);
-
-  // Resend Gmail signup confirmation link
-  const resendVerificationEmail = useCallback(async (email) => {
-    const cleanEmail = (email || '').trim().toLowerCase();
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      return { success: false, error: 'Please enter a valid Gmail address first.' };
-    }
-
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: cleanEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: formatSupabaseAuthError(error.message) };
-      }
-
-      return {
-        success: true,
-        message: `Verification link resent to ${cleanEmail}. Please check your Gmail inbox (and Spam/Promotions).`,
-      };
-    } catch (err) {
-      return { success: false, error: err.message || 'Failed to resend verification email.' };
-    }
-  }, [supabase]);
-
-  // Send password reset email via Supabase PKCE recovery flow
+  // Send password reset OTP via /api/auth/otp/send
   const sendPasswordResetEmail = useCallback(async (email) => {
-    const cleanEmail = (email || '').trim().toLowerCase();
-
-    if (!cleanEmail) {
-      return { success: false, error: 'Please enter your registered Gmail address.' };
-    }
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      return { success: false, error: 'Please enter a valid Gmail address (e.g. name@gmail.com).' };
-    }
-
-    try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/update-password`;
-      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo,
-      });
-
-      if (error) {
-        return { success: false, error: formatSupabaseAuthError(error.message) };
-      }
-
-      return {
-        success: true,
-        message: `Password reset link sent to ${cleanEmail}. Open the link in your Gmail inbox (in this same browser) to set a new password.`,
-      };
-    } catch (err) {
-      return { success: false, error: err.message || 'Failed to send password reset email.' };
-    }
-  }, [supabase]);
+    return requestAuthOtp({
+      purpose: 'recovery',
+      email,
+    });
+  }, [requestAuthOtp]);
 
   // Update password during recovery or while authenticated
   const updateUserPassword = useCallback(async (newPassword) => {
@@ -463,7 +428,9 @@ export function AuthProvider({ children }) {
         signInWithPassword,
         signInWithGoogle,
         signUpWithPassword,
-        resendVerificationEmail,
+        requestAuthOtp,
+        verifyEmailOtp,
+        completePasswordResetWithOtp,
         sendPasswordResetEmail,
         updateUserPassword,
         clearRecoveryMode,
