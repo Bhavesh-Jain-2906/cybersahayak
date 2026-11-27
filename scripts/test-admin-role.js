@@ -72,16 +72,43 @@ async function runAdminTests() {
   const adminToken = adminLogin.session.access_token;
   console.log('   PASS: Admin successfully authenticated.');
 
-  // 2. Register a temporary citizen user to test non-admin access
+  // 2. Provision a confirmed non-admin citizen user (claiming role:'admin' only in self-writable user_metadata)
   const runId = Date.now();
   const citizenEmail = `citizen_${runId}@gmail.com`;
   const citizenPass = `Pass_${runId}!123`;
-  const { data: citizenLogin } = await client.auth.signUp({
-    email: citizenEmail,
-    password: citizenPass,
-    options: { data: { name: 'Normal Citizen', role: 'admin' } },
-  });
-  const citizenToken = citizenLogin.session?.access_token;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  let citizenUserId = null;
+  let citizenToken = null;
+
+  if (serviceKey) {
+    const svc = createClient(SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data: createdCit, error: citErr } = await svc.auth.admin.createUser({
+      email: citizenEmail,
+      password: citizenPass,
+      email_confirm: true,
+      user_metadata: { name: 'Normal Citizen', role: 'admin' },
+    });
+    if (citErr) throw new Error('Failed to create test citizen: ' + citErr.message);
+    citizenUserId = createdCit?.user?.id;
+    const { data: citLogin } = await client.auth.signInWithPassword({
+      email: citizenEmail,
+      password: citizenPass,
+    });
+    citizenToken = citLogin?.session?.access_token;
+  } else {
+    const { data: citizenLogin } = await client.auth.signUp({
+      email: citizenEmail,
+      password: citizenPass,
+      options: { data: { name: 'Normal Citizen', role: 'admin' } },
+    });
+    citizenUserId = citizenLogin?.user?.id;
+    citizenToken = citizenLogin?.session?.access_token;
+  }
+
+  if (!citizenToken) {
+    console.error('FAIL: Could not obtain a valid JWT for non-admin citizen user (check SUPABASE_SERVICE_ROLE_KEY).');
+    process.exit(1);
+  }
 
   function callAdminApi({ method, token, pathSuffix = '', body = null }) {
     return new Promise((resolve, reject) => {
@@ -179,11 +206,11 @@ async function runAdminTests() {
     console.error('   FAIL: Admin user creation failed:', resAddUser.body);
   }
 
-  if (citizenLogin?.user?.id) {
+  if (citizenUserId) {
     await callAdminApi({
       method: 'DELETE',
       token: adminToken,
-      pathSuffix: `?userId=${encodeURIComponent(citizenLogin.user.id)}`,
+      pathSuffix: `?userId=${encodeURIComponent(citizenUserId)}`,
     });
   }
 

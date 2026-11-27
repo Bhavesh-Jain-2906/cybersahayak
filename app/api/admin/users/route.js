@@ -5,7 +5,18 @@ import { getAuthenticatedUser } from '@/lib/supabase/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+function isAdminMetadata(meta) {
+  return Boolean(meta && (meta.role === 'admin' || meta.isAdmin === true));
+}
+
+function isConfiguredAdminEmail(email) {
+  const configured = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  return Boolean(configured && email && email.trim().toLowerCase() === configured);
+}
+
+function hasAdminAccess(user) {
+  return isAdminMetadata(user?.app_metadata) || isConfiguredAdminEmail(user?.email);
+}
 
 /**
  * Helper to obtain admin service role client if configured,
@@ -27,26 +38,56 @@ function getServiceRoleClient() {
 }
 
 /**
+ * Verify caller holds a valid authenticated Supabase session with admin privileges.
+ */
+async function requireAdmin(req) {
+  const { user, error: authError, supabase } = await getAuthenticatedUser(req);
+
+  if (!user || authError || !supabase) {
+    return {
+      errorResponse: NextResponse.json({ success: false, error: 'Unauthorized.' }, { status: 401 }),
+    };
+  }
+
+  if (!hasAdminAccess(user)) {
+    return {
+      errorResponse: NextResponse.json(
+        { success: false, error: 'Forbidden. Admin privileges required.' },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { user, supabase };
+}
+
+/**
  * GET /api/admin/users
  * Returns list of all registered users and database metrics.
  */
 export async function GET(req) {
   try {
-    const { user, error: authError, supabase } = await getAuthenticatedUser(req);
-
-    if (!user || authError || !supabase) {
-      return NextResponse.json({ success: false, error: 'Unauthorized.' }, { status: 401 });
-    }
-
-    if ((!ADMIN_EMAIL || (user.email || '').toLowerCase() !== ADMIN_EMAIL) && user.app_metadata?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. Admin privileges required.' },
-        { status: 403 }
-      );
-    }
+    const { user, supabase, errorResponse } = await requireAdmin(req);
+    if (errorResponse) return errorResponse;
 
     const serviceClient = getServiceRoleClient();
     const activeClient = serviceClient || supabase;
+
+    // Resolve authoritative admin roles from Supabase Auth app_metadata when service role is available
+    const authRoleMap = new Map();
+    if (serviceClient?.auth?.admin) {
+      const { data: authList, error: authListErr } = await serviceClient.auth.admin.listUsers({
+        perPage: 1000,
+      });
+      if (!authListErr && authList?.users) {
+        for (const authUser of authList.users) {
+          authRoleMap.set(
+            authUser.id,
+            isAdminMetadata(authUser.app_metadata) || isConfiguredAdminEmail(authUser.email)
+          );
+        }
+      }
+    }
 
     // Fetch all profiles from database
     const { data: profiles, error: profileErr } = await activeClient
@@ -68,14 +109,19 @@ export async function GET(req) {
       .from('messages')
       .select('id', { count: 'exact', head: true });
 
-    const userList = (profiles || []).map((p) => ({
-      id: p.id,
-      name: p.name || 'Digital Citizen',
-      email: p.email,
-      createdAt: p.created_at,
-      isAdmin: Boolean(ADMIN_EMAIL && (p.email || '').toLowerCase() === ADMIN_EMAIL),
-      role: ADMIN_EMAIL && (p.email || '').toLowerCase() === ADMIN_EMAIL ? 'admin' : 'user',
-    }));
+    const userList = (profiles || []).map((p) => {
+      const isUserAdmin = authRoleMap.has(p.id)
+        ? authRoleMap.get(p.id)
+        : p.id === user.id || isConfiguredAdminEmail(p.email);
+      return {
+        id: p.id,
+        name: p.name || 'Digital Citizen',
+        email: p.email,
+        createdAt: p.created_at,
+        isAdmin: isUserAdmin,
+        role: isUserAdmin ? 'admin' : 'user',
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -102,25 +148,16 @@ export async function GET(req) {
  */
 export async function POST(req) {
   try {
-    const { user, error: authError, supabase } = await getAuthenticatedUser(req);
-
-    if (!user || authError || !supabase) {
-      return NextResponse.json({ success: false, error: 'Unauthorized.' }, { status: 401 });
-    }
-
-    if ((!ADMIN_EMAIL || (user.email || '').toLowerCase() !== ADMIN_EMAIL) && user.app_metadata?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. Admin privileges required.' },
-        { status: 403 }
-      );
-    }
+    const { supabase, errorResponse } = await requireAdmin(req);
+    if (errorResponse) return errorResponse;
 
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== 'object') {
       return NextResponse.json({ success: false, error: 'Invalid request body.' }, { status: 400 });
     }
 
-    const { name, email, password, role = 'user' } = body;
+    const { name, email, password, role: rawRole = 'user' } = body;
+    const role = rawRole === 'admin' ? 'admin' : 'user';
 
     const cleanName = (name || '').trim();
     const cleanEmail = (email || '').trim().toLowerCase();
@@ -144,12 +181,12 @@ export async function POST(req) {
     let newUserId = null;
 
     if (serviceClient?.auth?.admin) {
-      // Use service role if available
       const { data: adminCreated, error: adminErr } = await serviceClient.auth.admin.createUser({
         email: cleanEmail,
         password: cleanPassword,
         email_confirm: true,
-        user_metadata: { name: cleanName, role },
+        user_metadata: { name: cleanName },
+        app_metadata: { role, isAdmin: role === 'admin' },
       });
 
       if (adminErr) {
@@ -157,7 +194,12 @@ export async function POST(req) {
       }
       newUserId = adminCreated.user.id;
     } else {
-      // Use standard client signUp
+      if (role === 'admin') {
+        return NextResponse.json(
+          { success: false, error: 'Creating administrator accounts requires SUPABASE_SERVICE_ROLE_KEY.' },
+          { status: 403 }
+        );
+      }
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       const client = createSupabaseClient(supabaseUrl, anonKey);
@@ -166,7 +208,7 @@ export async function POST(req) {
         email: cleanEmail,
         password: cleanPassword,
         options: {
-          data: { name: cleanName, role },
+          data: { name: cleanName },
         },
       });
 
@@ -211,18 +253,8 @@ export async function POST(req) {
  */
 export async function DELETE(req) {
   try {
-    const { user, error: authError, supabase } = await getAuthenticatedUser(req);
-
-    if (!user || authError || !supabase) {
-      return NextResponse.json({ success: false, error: 'Unauthorized.' }, { status: 401 });
-    }
-
-    if ((!ADMIN_EMAIL || (user.email || '').toLowerCase() !== ADMIN_EMAIL) && user.app_metadata?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: 'Forbidden. Admin privileges required.' },
-        { status: 403 }
-      );
-    }
+    const { user, supabase, errorResponse } = await requireAdmin(req);
+    if (errorResponse) return errorResponse;
 
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
@@ -244,6 +276,17 @@ export async function DELETE(req) {
 
     const serviceClient = getServiceRoleClient();
     const activeClient = serviceClient || supabase;
+
+    // Protect other admin accounts from deletion through the API
+    if (serviceClient?.auth?.admin) {
+      const { data: targetData } = await serviceClient.auth.admin.getUserById(userId);
+      if (targetData?.user && hasAdminAccess(targetData.user)) {
+        return NextResponse.json(
+          { success: false, error: 'Cannot delete a protected System Administrator account.' },
+          { status: 400 }
+        );
+      }
+    }
 
     // 1. Delete conversations (messages cascade)
     await activeClient.from('conversations').delete().eq('user_id', userId);

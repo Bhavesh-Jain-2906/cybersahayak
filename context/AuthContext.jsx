@@ -40,11 +40,10 @@ export function AuthProvider({ children }) {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const keepRecoveryOnSignOutRef = useRef(false);
 
-  // Determine if the active user holds Administrator privileges
+  // Determine if the active user holds Administrator privileges (enforced via server-controlled app_metadata)
   const isAdmin = useMemo(() => {
-    return (
-      user?.app_metadata?.role === 'admin' ||
-      user?.app_metadata?.isAdmin === true
+    return Boolean(
+      user?.app_metadata?.role === 'admin' || user?.app_metadata?.isAdmin === true
     );
   }, [user]);
 
@@ -160,19 +159,17 @@ export function AuthProvider({ children }) {
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPassword = (password || '').trim();
 
-    {
-      if (!cleanEmail) {
-        return { success: false, error: 'Email address is required.' };
-      }
-      if (!EMAIL_REGEX.test(cleanEmail)) {
-        return { success: false, error: 'Please enter a valid email address (e.g. user@example.com).' };
-      }
-      if (!cleanPassword) {
-        return { success: false, error: 'Password is required.' };
-      }
-      if (cleanPassword.length < 6) {
-        return { success: false, error: 'Password must be at least 6 characters long.' };
-      }
+    if (!cleanEmail) {
+      return { success: false, error: 'Email address is required.' };
+    }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid email address (e.g. user@example.com).' };
+    }
+    if (!cleanPassword) {
+      return { success: false, error: 'Password is required.' };
+    }
+    if (cleanPassword.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters long.' };
     }
 
     try {

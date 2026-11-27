@@ -371,7 +371,11 @@ export default function AdminConsoleView() {
                     </tr>
                   ) : (
                     filteredUsers.map((u) => {
-                      const isThisAdmin = Boolean(u.isAdmin || u.role === 'admin' || (currentAdmin?.id && u.id === currentAdmin.id));
+                      const isThisAdmin = Boolean(
+                        u.isAdmin ||
+                        u.role === 'admin' ||
+                        (currentAdmin?.id && u.id === currentAdmin.id)
+                      );
                       return (
                         <tr
                           key={u.id}

@@ -258,7 +258,7 @@ export default function AuthScreen() {
     }
   };
 
-  // Validate and submit form
+  // Validate and submit form (auth, one-time links & forgot password)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
@@ -294,44 +294,43 @@ export default function AuthScreen() {
       }
       return;
     }
-    {
-      if (mode === 'register') {
-        const cleanName = name.trim();
-        if (!cleanName) {
-          setErrorMessage('Please enter your full name.');
-          return;
-        }
-        if (cleanName.length < 2) {
-          setErrorMessage('Name must be at least 2 characters long.');
-          return;
-        }
-      }
 
-      if (!cleanEmail) {
-        setErrorMessage('Please enter your email address.');
+    if (mode === 'register') {
+      const cleanName = name.trim();
+      if (!cleanName) {
+        setErrorMessage('Please enter your full name.');
         return;
       }
-
-      if (!EMAIL_REGEX.test(cleanEmail)) {
-        setErrorMessage('Please enter a valid email address (e.g. your.name@gmail.com).');
+      if (cleanName.length < 2) {
+        setErrorMessage('Name must be at least 2 characters long.');
         return;
       }
+    }
 
-      if (!cleanPassword) {
-        setErrorMessage('Please enter your password.');
+    if (!cleanEmail) {
+      setErrorMessage('Please enter your email address.');
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      setErrorMessage('Please enter a valid email address (e.g. your.name@gmail.com).');
+      return;
+    }
+
+    if (!cleanPassword) {
+      setErrorMessage('Please enter your password.');
+      return;
+    }
+
+    if (cleanPassword.length < 6) {
+      setErrorMessage('Password must contain at least 6 characters.');
+      return;
+    }
+
+    if (mode === 'register') {
+      if (cleanPassword !== confirmPassword.trim()) {
+        setErrorMessage('Passwords do not match. Please verify both fields.');
         return;
-      }
-
-      if (cleanPassword.length < 6) {
-        setErrorMessage('Password must contain at least 6 characters.');
-        return;
-      }
-
-      if (mode === 'register') {
-        if (cleanPassword !== confirmPassword.trim()) {
-          setErrorMessage('Passwords do not match. Please verify both fields.');
-          return;
-        }
       }
     }
 
@@ -689,17 +688,15 @@ export default function AuthScreen() {
                           ? 'Encrypted Supabase session • Never share banking OTPs or PINs.'
                           : 'A one-time activation link will be emailed to verify your inbox.'}
                       </p>
-                      {mode === 'login' &&
-                        password.length > 0 &&
-                        email.trim().toLowerCase() !== 'admin' && (
-                          <span
-                            className={`text-[10px] font-mono shrink-0 ${
-                              password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                            }`}
-                          >
-                            {password.length >= 6 ? '✓ valid' : `${password.length}/6`}
-                          </span>
-                        )}
+                      {mode === 'login' && password.length > 0 && (
+                        <span
+                          className={`text-[10px] font-mono shrink-0 ${
+                            password.length >= 6 ? 'text-emerald-400' : 'text-[#A1A1AA]'
+                          }`}
+                        >
+                          {password.length >= 6 ? '✓ valid' : `${password.length}/6`}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
