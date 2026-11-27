@@ -75,10 +75,10 @@ export default function QuizView() {
 
   const getScoreBadge = () => {
     const ratio = score / QUIZ_QUESTIONS.length;
-    if (ratio === 1) return { title: 'Cyber Defense Master 🛡️', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' };
-    if (ratio >= 0.75) return { title: 'Cyber Aware Citizen 🌟', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' };
-    if (ratio >= 0.5) return { title: 'Developing Defender ⚠️', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' };
-    return { title: 'High Scam Vulnerability 🚨', color: 'text-red-400 bg-red-500/10 border-red-500/30' };
+    if (ratio === 1) return { title: 'Cyber Defense Master 🛡️', color: 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' };
+    if (ratio >= 0.75) return { title: 'Cyber Aware Citizen 🌟', color: 'text-[#4338CA] dark:text-blue-400 bg-[#EEF2FF] dark:bg-blue-500/10 border-[#C7D2FE] dark:border-blue-500/30' };
+    if (ratio >= 0.5) return { title: 'Developing Defender ⚠️', color: 'text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30' };
+    return { title: 'High Scam Vulnerability 🚨', color: 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30' };
   };
 
   return (

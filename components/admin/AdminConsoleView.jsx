@@ -194,21 +194,21 @@ export default function AdminConsoleView() {
       <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin">
         <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
           {/* Header Banner */}
-          <div className="rounded-2xl bg-gradient-to-r from-amber-600/20 via-blue-900/30 to-indigo-950/40 border border-amber-500/30 p-6 backdrop-blur-md shadow-cool-blue flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="rounded-2xl bg-gradient-to-r from-indigo-50 via-white to-amber-50 dark:from-amber-600/20 dark:via-blue-900/30 dark:to-indigo-950/40 border border-indigo-200/90 dark:border-amber-500/30 p-6 backdrop-blur-md shadow-[0_6px_24px_rgba(99,102,241,0.08)] dark:shadow-cool-blue flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-white tracking-tight">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                     Database Administrator Hub
                   </h2>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40">
                     SUPER ADMIN
                   </span>
                 </div>
-                <p className="text-xs text-blue-200/70 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-blue-200/70 mt-0.5">
                   Direct database management of registered users, conversation threads, and RLS policies.
                 </p>
               </div>
@@ -218,7 +218,7 @@ export default function AdminConsoleView() {
               <button
                 onClick={fetchAdminData}
                 disabled={loading}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-blue-900/40 text-blue-200 text-xs font-semibold transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-indigo-50 dark:bg-slate-900/80 dark:hover:bg-slate-800 border border-indigo-200 dark:border-blue-900/40 text-indigo-700 dark:text-blue-200 text-xs font-semibold transition-all"
                 title="Refresh database records"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -227,7 +227,7 @@ export default function AdminConsoleView() {
 
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-cool-blue transition-all"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 dark:from-blue-600 dark:to-indigo-600 dark:hover:from-blue-500 dark:hover:to-indigo-500 text-white text-xs font-semibold shadow-[0_6px_18px_rgba(99,102,241,0.3)] dark:shadow-cool-blue transition-all"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Add New User</span>
@@ -240,8 +240,8 @@ export default function AdminConsoleView() {
             <div
               className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 animate-fade-in ${
                 feedback.type === 'error'
-                  ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                  : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                  ? 'bg-red-50 dark:bg-red-500/15 border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300'
+                  : 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -386,17 +386,17 @@ export default function AdminConsoleView() {
                               <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                                   isThisAdmin
-                                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                                    : 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                                    ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/40'
+                                    : 'bg-[#EEF2FF] dark:bg-blue-500/10 text-[#4F46E5] dark:text-blue-400 border border-[#C7D2FE] dark:border-blue-500/30'
                                 }`}
                               >
                                 {isThisAdmin ? <ShieldCheck className="w-4 h-4" /> : <User className="w-4 h-4" />}
                               </div>
                               <div className="min-w-0">
-                                <div className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                                <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                                   {u.name}
                                 </div>
-                                <div className="text-[11px] text-slate-400 dark:text-blue-300/50 truncate">
+                                <div className="text-[11px] text-slate-600 dark:text-blue-300/50 truncate">
                                   {u.email}
                                 </div>
                               </div>
@@ -407,8 +407,8 @@ export default function AdminConsoleView() {
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                                 isThisAdmin
-                                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                                  : 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
+                                  ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30'
+                                  : 'bg-[#EEF2FF] dark:bg-blue-500/10 text-[#4338CA] dark:text-blue-300 border border-[#C7D2FE] dark:border-blue-500/20'
                               }`}
                             >
                               {isThisAdmin ? 'Administrator' : 'Citizen / User'}

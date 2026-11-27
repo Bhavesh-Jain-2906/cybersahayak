@@ -199,8 +199,8 @@ export default function SettingsModal() {
             onClick={() => setActiveTab('profile')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'profile'
-                ? 'bg-[#6366F1]/12 dark:bg-blue-600/15 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/35 dark:border-blue-500/30 font-semibold'
-                : 'text-slate-500 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
+                ? 'bg-[#EEF2FF] dark:bg-blue-600/15 text-[#4338CA] dark:text-blue-400 border border-[#C7D2FE] dark:border-blue-500/30 font-semibold'
+                : 'text-slate-600 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
             }`}
           >
             <User className="w-3.5 h-3.5" />
@@ -211,8 +211,8 @@ export default function SettingsModal() {
             onClick={() => setActiveTab('preferences')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'preferences'
-                ? 'bg-[#6366F1]/12 dark:bg-blue-600/15 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/35 dark:border-blue-500/30 font-semibold'
-                : 'text-slate-500 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
+                ? 'bg-[#EEF2FF] dark:bg-blue-600/15 text-[#4338CA] dark:text-blue-400 border border-[#C7D2FE] dark:border-blue-500/30 font-semibold'
+                : 'text-slate-600 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
@@ -223,8 +223,8 @@ export default function SettingsModal() {
             onClick={() => setActiveTab('data')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'data'
-                ? 'bg-[#6366F1]/12 dark:bg-blue-600/15 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/35 dark:border-blue-500/30 font-semibold'
-                : 'text-slate-500 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
+                ? 'bg-[#EEF2FF] dark:bg-blue-600/15 text-[#4338CA] dark:text-blue-400 border border-[#C7D2FE] dark:border-blue-500/30 font-semibold'
+                : 'text-slate-600 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
             }`}
           >
             <Database className="w-3.5 h-3.5" />
@@ -235,8 +235,8 @@ export default function SettingsModal() {
             onClick={() => setActiveTab('about')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeTab === 'about'
-                ? 'bg-[#6366F1]/12 dark:bg-blue-600/15 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/35 dark:border-blue-500/30 font-semibold'
-                : 'text-slate-500 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
+                ? 'bg-[#EEF2FF] dark:bg-blue-600/15 text-[#4338CA] dark:text-blue-400 border border-[#C7D2FE] dark:border-blue-500/30 font-semibold'
+                : 'text-slate-600 dark:text-blue-300/60 hover:text-indigo-700 dark:hover:text-white hover:bg-indigo-50/70 dark:hover:bg-blue-950/40'
             }`}
           >
             <Info className="w-3.5 h-3.5" />

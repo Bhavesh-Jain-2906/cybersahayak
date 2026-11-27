@@ -39,35 +39,35 @@ function AssistantMessage({ message }) {
       <div className="flex flex-col items-start max-w-3xl min-w-0 w-full">
         {/* Header line */}
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
-          <span className="text-xs font-semibold text-slate-800 dark:text-zinc-100">
+          <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
             Connor
           </span>
 
-          <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.2 rounded bg-[#6366F1]/10 dark:bg-purple-500/15 text-indigo-700 dark:text-purple-200 border border-[#6366F1]/25 dark:border-purple-400/25 font-medium">
-            <ShieldCheck className="w-2.5 h-2.5 text-[#6366F1] dark:text-purple-300" />
+          <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.2 rounded bg-[#EEF2FF] dark:bg-purple-500/15 text-[#4338CA] dark:text-purple-200 border border-[#C7D2FE] dark:border-purple-400/25 font-semibold">
+            <ShieldCheck className="w-2.5 h-2.5 text-[#4F46E5] dark:text-purple-300" />
             AI Guide
           </span>
 
           {hasSources && (
-            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-[#6366F1]/10 dark:bg-purple-500/15 text-indigo-700 dark:text-purple-200 border border-[#6366F1]/25 dark:border-purple-400/25 font-medium">
-              <BookOpen className="w-2.5 h-2.5 text-[#6366F1] dark:text-purple-300" />
+            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-[#EEF2FF] dark:bg-purple-500/15 text-[#4338CA] dark:text-purple-200 border border-[#C7D2FE] dark:border-purple-400/25 font-semibold">
+              <BookOpen className="w-2.5 h-2.5 text-[#4F46E5] dark:text-purple-300" />
               RAG Verified
             </span>
           )}
 
           {isDemo && (
-            <span className="inline-flex items-center text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium">
+            <span className="inline-flex items-center text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-500 border border-amber-300 dark:border-amber-500/20 font-medium">
               Demo Mode
             </span>
           )}
 
-          <span className="text-[11px] text-slate-400 dark:text-zinc-400 ml-auto sm:ml-0">
+          <span className="text-[11px] text-slate-600 dark:text-zinc-400 ml-auto sm:ml-0">
             {formatMessageTime(message.createdAt)}
           </span>
         </div>
 
         {/* Message Card */}
-        <div className="w-full rounded-2xl rounded-tl-sm bg-white/80 dark:bg-[#0B0914]/75 backdrop-blur-md border border-indigo-200/75 dark:border-white/10 px-4 md:px-5 py-4 shadow-[0_4px_18px_rgba(99,102,241,0.06)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]">
+        <div className="w-full rounded-2xl rounded-tl-sm bg-white/90 dark:bg-[#0B0914]/75 backdrop-blur-xl border border-indigo-200/80 dark:border-white/10 px-4 md:px-5 py-4 shadow-[0_6px_22px_rgba(99,102,241,0.08)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]">
           <MarkdownRenderer content={message.content} />
 
           {/* RAG Knowledge References Accordion */}
@@ -124,14 +124,14 @@ function AssistantMessage({ message }) {
           )}
 
           {/* Emergency Safety Footer Reminder */}
-          <div className="mt-4 pt-3 border-t border-indigo-100 dark:border-purple-500/15 flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-purple-200/60">
+          <div className="mt-4 pt-3 border-t border-indigo-100 dark:border-purple-500/15 flex items-center justify-between gap-2 text-[11px] text-slate-600 dark:text-purple-200/60">
             <div className="flex items-center gap-1.5 truncate">
-              <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 drop-shadow-[0_0_4px_rgba(245,158,11,0.4)]" />
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500 shrink-0" />
               <span className="truncate">
                 Emergency Helpline: Dial{' '}
                 <a
                   href={`tel:${APP_CONFIG.nationalHelpline}`}
-                  className="text-[#6366F1] dark:text-purple-300 font-semibold underline hover:text-indigo-800 dark:hover:text-purple-200"
+                  className="text-[#4F46E5] dark:text-purple-300 font-semibold underline hover:text-indigo-800 dark:hover:text-purple-200"
                 >
                   {APP_CONFIG.nationalHelpline}
                 </a>{' '}
@@ -140,7 +140,7 @@ function AssistantMessage({ message }) {
                   href={APP_CONFIG.officialPortal}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#6366F1] dark:text-purple-300 font-semibold underline hover:text-indigo-800 dark:hover:text-purple-200"
+                  className="text-[#4F46E5] dark:text-purple-300 font-semibold underline hover:text-indigo-800 dark:hover:text-purple-200"
                 >
                   cybercrime.gov.in
                 </a>
@@ -149,13 +149,13 @@ function AssistantMessage({ message }) {
 
             <button
               onClick={handleCopy}
-              className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-indigo-700 dark:text-purple-300/65 dark:hover:text-purple-100 p-1 shrink-0"
+              className="inline-flex items-center gap-1 text-[11px] text-slate-600 hover:text-[#4F46E5] dark:text-purple-300/65 dark:hover:text-purple-100 p-1 shrink-0"
               title="Copy response"
             >
               {copied ? (
                 <>
-                  <Check className="w-3 h-3 text-[#6366F1] dark:text-purple-300" />
-                  <span className="text-[#6366F1] dark:text-purple-300 font-medium">Copied</span>
+                  <Check className="w-3 h-3 text-[#4F46E5] dark:text-purple-300" />
+                  <span className="text-[#4F46E5] dark:text-purple-300 font-medium">Copied</span>
                 </>
               ) : (
                 <>

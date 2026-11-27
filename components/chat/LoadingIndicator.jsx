@@ -18,8 +18,8 @@ export default function LoadingIndicator() {
           <span className="text-[11px] text-slate-400 dark:text-zinc-400">Processing...</span>
         </div>
 
-        <div className="rounded-2xl rounded-tl-sm bg-white/80 dark:bg-[#0B0914]/75 backdrop-blur-md border border-indigo-200/75 dark:border-white/10 px-4 py-3 shadow-[0_4px_16px_rgba(99,102,241,0.08)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)] flex items-center gap-2">
-          <span className="text-xs text-slate-600 dark:text-zinc-300 font-medium">
+        <div className="rounded-2xl rounded-tl-sm bg-white/90 dark:bg-[#0B0914]/75 backdrop-blur-xl border border-indigo-200/80 dark:border-white/10 px-4 py-3 shadow-[0_4px_16px_rgba(99,102,241,0.08)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)] flex items-center gap-2">
+          <span className="text-xs text-slate-700 dark:text-zinc-300 font-medium">
             Formulating guidance
           </span>
           <div className="flex items-center gap-1.5">

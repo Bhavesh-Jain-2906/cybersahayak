@@ -60,7 +60,7 @@ export default function Sidebar() {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 flex flex-col h-full bg-white/45 dark:bg-[#06050B]/40 backdrop-blur-md border-r-0 transition-all duration-300 ease-in-out ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 flex flex-col h-full bg-white/75 dark:bg-[#06050B]/40 backdrop-blur-xl border-r border-indigo-100/75 dark:border-r-0 transition-all duration-300 ease-in-out ${
           isMobileSidebarOpen
             ? 'w-72 md:w-80 translate-x-0 shadow-2xl'
             : '-translate-x-full lg:translate-x-0'
@@ -81,11 +81,11 @@ export default function Sidebar() {
                 <span className="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white truncate">
                   Connor
                 </span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#6366F1]/10 dark:bg-purple-500/15 text-indigo-600 dark:text-purple-200 border border-[#6366F1]/30 dark:border-purple-400/25 shadow-[0_0_8px_rgba(99,102,241,0.16)] dark:shadow-none shrink-0">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#EEF2FF] dark:bg-purple-500/15 text-[#4338CA] dark:text-purple-200 border border-[#C7D2FE] dark:border-purple-400/25 shrink-0">
                   AI Guide
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-tight truncate">
+              <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-tight truncate">
                 Cybercrime Assistance & Safety
               </p>
             </div>
@@ -122,11 +122,11 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'chat'
-                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
+                ? 'bg-[#EEF2FF]/90 dark:bg-[#241B35]/70 text-[#3730A3] dark:text-white border-[#6366F1]/45 dark:border-purple-400/30 shadow-[0_2px_10px_rgba(99,102,241,0.14)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-800 dark:text-zinc-400 hover:bg-indigo-50/80 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-[#6366F1] dark:text-purple-300 shrink-0" />
+            <MessageSquare className="w-4 h-4 text-[#4F46E5] dark:text-purple-300 shrink-0" />
             <span className="truncate">AI Assistant</span>
             {activeConversation && (
               <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#6366F1] dark:bg-purple-400 shrink-0 animate-pulse" />
@@ -140,11 +140,11 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'dashboard'
-                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
+                ? 'bg-[#EEF2FF]/90 dark:bg-[#241B35]/70 text-[#3730A3] dark:text-white border-[#6366F1]/45 dark:border-purple-400/30 shadow-[0_2px_10px_rgba(99,102,241,0.14)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-800 dark:text-zinc-400 hover:bg-indigo-50/80 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4 text-indigo-600 dark:text-purple-300 shrink-0" />
+            <LayoutDashboard className="w-4 h-4 text-[#4F46E5] dark:text-purple-300 shrink-0" />
             <span className="truncate">Protection Hub</span>
           </button>
 
@@ -155,13 +155,13 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'awareness'
-                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
+                ? 'bg-[#EEF2FF]/90 dark:bg-[#241B35]/70 text-[#3730A3] dark:text-white border-[#6366F1]/45 dark:border-purple-400/30 shadow-[0_2px_10px_rgba(99,102,241,0.14)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-800 dark:text-zinc-400 hover:bg-indigo-50/80 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <BookOpen className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
+            <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="truncate">Cyber Awareness</span>
-            <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20 shrink-0">
+            <span className="ml-auto text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20 shrink-0">
               10
             </span>
           </button>
@@ -173,14 +173,14 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'quiz'
-                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
+                ? 'bg-[#EEF2FF]/90 dark:bg-[#241B35]/70 text-[#3730A3] dark:text-white border-[#6366F1]/45 dark:border-purple-400/30 shadow-[0_2px_10px_rgba(99,102,241,0.14)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-800 dark:text-zinc-400 hover:bg-indigo-50/80 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <HelpCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
+            <HelpCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span className="truncate">Safety Quiz</span>
             {quizStats?.completed && (
-              <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20 shrink-0">
+              <span className="ml-auto text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20 shrink-0">
                 {quizStats.score}/{quizStats.total}
               </span>
             )}
@@ -193,11 +193,11 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'resources'
-                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
+                ? 'bg-[#EEF2FF]/90 dark:bg-[#241B35]/70 text-[#3730A3] dark:text-white border-[#6366F1]/45 dark:border-purple-400/30 shadow-[0_2px_10px_rgba(99,102,241,0.14)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-800 dark:text-zinc-400 hover:bg-indigo-50/80 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-[#6366F1] dark:text-purple-300 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-[#4F46E5] dark:text-purple-300 shrink-0" />
             <span className="truncate">Help & Resources</span>
           </button>
 
@@ -207,15 +207,15 @@ export default function Sidebar() {
                 setActiveView('admin');
                 setIsMobileSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
                 activeView === 'admin'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold'
-                  : 'text-amber-400/80 hover:bg-amber-500/10 hover:text-amber-300'
+                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 font-semibold shadow-sm dark:shadow-none'
+                  : 'border-transparent text-amber-800 dark:text-amber-400/80 hover:bg-amber-50/80 dark:hover:bg-amber-500/10 hover:text-amber-950 dark:hover:text-amber-300'
               }`}
             >
-              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+              <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
               <span className="truncate font-semibold">Admin Console</span>
-              <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="ml-auto text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">
                 ROOT
               </span>
             </button>
