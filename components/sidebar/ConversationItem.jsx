@@ -44,7 +44,7 @@ export default function ConversationItem({ conversation }) {
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-200/80 dark:bg-[#171222]/80 border border-blue-500/40 dark:border-purple-400/40 text-sm">
+      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-indigo-50/85 dark:bg-[#171222]/80 border border-[#6366F1]/45 dark:border-purple-400/40 text-sm">
         <input
           ref={inputRef}
           type="text"
@@ -54,11 +54,11 @@ export default function ConversationItem({ conversation }) {
             if (e.key === 'Enter') handleSaveRename(e);
             if (e.key === 'Escape') handleCancelRename(e);
           }}
-          className="flex-1 min-w-0 bg-transparent px-1 py-0.5 text-xs text-slate-900 dark:text-white focus:outline-none border-b border-blue-500 dark:border-purple-400"
+          className="flex-1 min-w-0 bg-transparent px-1 py-0.5 text-xs text-slate-900 dark:text-white focus:outline-none border-b border-[#6366F1] dark:border-purple-400"
         />
         <button
           onClick={handleSaveRename}
-          className="p-1 text-blue-600 dark:text-purple-300 hover:text-blue-700 dark:hover:text-purple-200 rounded"
+          className="p-1 text-[#6366F1] dark:text-purple-300 hover:text-indigo-700 dark:hover:text-purple-200 rounded"
           title="Save title"
         >
           <Check className="w-3.5 h-3.5" />
@@ -104,15 +104,15 @@ export default function ConversationItem({ conversation }) {
       onClick={() => selectConversation(conversation.id)}
       className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs md:text-sm cursor-pointer transition-all duration-200 select-none border ${
         isActive
-          ? 'bg-white/80 dark:bg-[#231936]/65 text-blue-900 dark:text-white font-medium border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none'
-          : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 dark:hover:border-white/10 hover:text-slate-900 dark:hover:text-zinc-100'
+          ? 'bg-white/85 dark:bg-[#231936]/65 text-indigo-950 dark:text-white font-medium border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_3px_12px_rgba(99,102,241,0.1)] dark:shadow-none'
+          : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 dark:hover:border-white/10 hover:text-indigo-950 dark:hover:text-zinc-100'
       }`}
     >
       <MessageSquare
         className={`w-4 h-4 shrink-0 transition-colors ${
           isActive
-            ? 'text-blue-600 dark:text-purple-300'
-            : 'text-slate-400 group-hover:text-slate-600 dark:text-zinc-500 dark:group-hover:text-purple-300'
+            ? 'text-[#6366F1] dark:text-purple-300'
+            : 'text-slate-400 group-hover:text-indigo-500 dark:text-zinc-500 dark:group-hover:text-purple-300'
         }`}
       />
 

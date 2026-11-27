@@ -73,7 +73,7 @@ export default function Sidebar() {
         {/* Header / Brand */}
         <div className="flex items-center justify-between p-4 border-b border-transparent">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 dark:from-[#2C1F42] dark:via-[#221834] dark:to-[#161122] dark:border dark:border-purple-400/30 text-white dark:text-purple-200 shadow-cool-blue dark:shadow-none shrink-0">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#6366F1] via-indigo-500 to-indigo-700 dark:from-[#2C1F42] dark:via-[#221834] dark:to-[#161122] dark:border dark:border-purple-400/30 text-white dark:text-purple-200 shadow-[0_6px_18px_rgba(99,102,241,0.34)] dark:shadow-none shrink-0">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -81,7 +81,7 @@ export default function Sidebar() {
                 <span className="font-bold text-sm md:text-base tracking-tight text-slate-900 dark:text-white truncate">
                   Connor
                 </span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-500/15 dark:bg-purple-500/15 text-blue-400 dark:text-purple-200 border border-blue-500/30 dark:border-purple-400/25 shadow-[0_0_8px_rgba(59,130,246,0.2)] dark:shadow-none shrink-0">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#6366F1]/10 dark:bg-purple-500/15 text-indigo-600 dark:text-purple-200 border border-[#6366F1]/30 dark:border-purple-400/25 shadow-[0_0_8px_rgba(99,102,241,0.16)] dark:shadow-none shrink-0">
                   AI Guide
                 </span>
               </div>
@@ -95,7 +95,7 @@ export default function Sidebar() {
             {/* Desktop collapse button */}
             <button
               onClick={toggleDesktopSidebar}
-              className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors"
+              className="hidden lg:flex p-1.5 rounded-lg text-slate-500 hover:text-indigo-700 dark:text-zinc-400 dark:hover:text-white hover:bg-indigo-50/80 dark:hover:bg-white/10 transition-colors"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
@@ -105,7 +105,7 @@ export default function Sidebar() {
             {/* Mobile close button */}
             <button
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-white lg:hidden"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-700 dark:text-zinc-400 dark:hover:text-white lg:hidden"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -122,14 +122,14 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'chat'
-                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-blue-500 dark:text-purple-300 shrink-0" />
+            <MessageSquare className="w-4 h-4 text-[#6366F1] dark:text-purple-300 shrink-0" />
             <span className="truncate">AI Assistant</span>
             {activeConversation && (
-              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-purple-400 shrink-0 animate-pulse" />
+              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#6366F1] dark:bg-purple-400 shrink-0 animate-pulse" />
             )}
           </button>
 
@@ -140,11 +140,11 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'dashboard'
-                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4 text-indigo-500 dark:text-purple-300 shrink-0" />
+            <LayoutDashboard className="w-4 h-4 text-indigo-600 dark:text-purple-300 shrink-0" />
             <span className="truncate">Protection Hub</span>
           </button>
 
@@ -155,8 +155,8 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'awareness'
-                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
             <BookOpen className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />
@@ -173,8 +173,8 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'quiz'
-                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
             <HelpCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
@@ -193,11 +193,11 @@ export default function Sidebar() {
             }}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs md:text-sm font-medium transition-all border ${
               activeView === 'resources'
-                ? 'bg-white/80 dark:bg-[#241B35]/70 text-blue-700 dark:text-white border-blue-500/30 dark:border-purple-400/30 shadow-sm dark:shadow-none font-semibold'
-                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-zinc-100'
+                ? 'bg-white/85 dark:bg-[#241B35]/70 text-indigo-700 dark:text-white border-[#6366F1]/35 dark:border-purple-400/30 shadow-[0_4px_14px_rgba(99,102,241,0.12)] dark:shadow-none font-semibold'
+                : 'border-transparent text-slate-700 dark:text-zinc-400 hover:bg-indigo-50/70 dark:hover:bg-white/5 hover:text-indigo-950 dark:hover:text-zinc-100'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-cyan-500 dark:text-purple-300 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-[#6366F1] dark:text-purple-300 shrink-0" />
             <span className="truncate">Help & Resources</span>
           </button>
 
@@ -224,11 +224,11 @@ export default function Sidebar() {
 
         {/* Conversations Header with New Chat */}
         <div className="px-3 pt-2 pb-1.5">
-          <div className="border-t border-slate-300/60 dark:border-white/10 pt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider px-1">
+          <div className="border-t border-indigo-200/60 dark:border-white/10 pt-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider px-1">
             <span>Conversations</span>
             <button
               onClick={createNewChat}
-              className="p-1 rounded hover:bg-slate-200 dark:hover:bg-white/10 text-blue-500 dark:text-purple-300 transition-colors"
+              className="p-1 rounded hover:bg-indigo-50 dark:hover:bg-white/10 text-[#6366F1] dark:text-purple-300 transition-colors"
               title="New Chat (Ctrl+K)"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -240,7 +240,7 @@ export default function Sidebar() {
         <div className="px-3 pb-2">
           <button
             onClick={createNewChat}
-            className="group flex items-center justify-between w-full px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 dark:bg-none dark:bg-[#231936]/75 dark:hover:bg-[#2E2146]/90 dark:border dark:border-purple-400/30 text-white font-medium text-xs shadow-cool-blue hover:shadow-cool-blue-lg dark:shadow-none transition-all duration-200 active:scale-[0.99]"
+            className="group flex items-center justify-between w-full px-3 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] via-indigo-500 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 dark:bg-none dark:bg-[#231936]/75 dark:hover:bg-[#2E2146]/90 dark:border dark:border-purple-400/30 text-white font-medium text-xs shadow-[0_6px_18px_rgba(99,102,241,0.32)] hover:shadow-[0_8px_24px_rgba(99,102,241,0.42)] dark:shadow-none transition-all duration-200 active:scale-[0.99]"
           >
             <div className="flex items-center gap-2">
               <Plus className="w-3.5 h-3.5 dark:text-purple-200 transition-transform group-hover:rotate-90" />
@@ -255,13 +255,13 @@ export default function Sidebar() {
         {/* Search Conversations Input */}
         <div className="px-3 pb-2">
           <div className="relative flex items-center">
-            <Search className="w-3.5 h-3.5 absolute left-3 text-slate-400 dark:text-zinc-400 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-3 text-indigo-400 dark:text-zinc-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-white/70 dark:bg-[#0A0812]/60 border border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-0 dark:focus:border-purple-400/50 transition-all"
+              className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg bg-white/75 dark:bg-[#0A0812]/60 border border-indigo-200/70 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/25 focus:border-[#6366F1] dark:focus:ring-0 dark:focus:border-purple-400/50 transition-all"
             />
             {searchQuery && (
               <button

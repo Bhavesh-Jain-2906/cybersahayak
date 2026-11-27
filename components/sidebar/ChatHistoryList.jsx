@@ -12,7 +12,7 @@ export default function ChatHistoryList() {
   if (isDbLoading && filteredConversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <Loader2 className="w-5 h-5 text-blue-500 dark:text-purple-400 animate-spin mb-2" />
+        <Loader2 className="w-5 h-5 text-[#6366F1] dark:text-purple-400 animate-spin mb-2" />
         <p className="text-xs text-slate-400 dark:text-zinc-400">Loading conversations...</p>
       </div>
     );

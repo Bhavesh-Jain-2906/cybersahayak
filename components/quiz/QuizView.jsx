@@ -82,7 +82,7 @@ export default function QuizView() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-black">
+    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-white via-[#F9FAFF] to-indigo-50/60 dark:bg-none dark:bg-black">
       <ViewHeader
         title="Interactive Cyber Safety Quiz"
         subtitle="Evaluate your fraud defense reflexes across 8 real-world cybercrime scenarios"
@@ -92,7 +92,7 @@ export default function QuizView() {
         <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-semibold">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#6366F1]/10 dark:bg-blue-500/10 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/25 dark:border-blue-500/20 text-xs font-semibold">
             <HelpCircle className="w-3.5 h-3.5" />
             <span>Interactive Cyber Defense Assessment</span>
           </div>
@@ -105,20 +105,20 @@ export default function QuizView() {
         </div>
 
         {!isCompleted ? (
-          <div className="rounded-2xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 p-6 md:p-8 shadow-sm dark:shadow-vanta-card space-y-6">
+          <div className="rounded-2xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 p-6 md:p-8 shadow-[0_6px_24px_rgba(99,102,241,0.07)] dark:shadow-vanta-card space-y-6">
             {/* Progress Header */}
             <div>
               <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-blue-300/60 mb-2">
                 <span>
                   Question {currentIndex + 1} of {QUIZ_QUESTIONS.length}
                 </span>
-                <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                <span className="px-2 py-0.5 rounded bg-[#6366F1]/10 dark:bg-blue-500/10 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/25 dark:border-blue-500/20">
                   {currentQ.category}
                 </span>
               </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-blue-950/50 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-indigo-100/80 dark:bg-blue-950/50 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300 shadow-cool-blue-xs"
+                  className="h-full bg-gradient-to-r from-[#6366F1] to-indigo-600 dark:from-blue-600 dark:to-indigo-500 transition-all duration-300 shadow-[0_0_8px_rgba(99,102,241,0.4)] dark:shadow-cool-blue-xs"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -132,7 +132,7 @@ export default function QuizView() {
             {/* Options */}
             <div className="space-y-3">
               {currentQ.options.map((option, idx) => {
-                let btnStyle = 'border-slate-200 dark:border-blue-950/80 bg-white dark:bg-[#040816] hover:border-blue-500/50 hover:bg-slate-50 dark:hover:bg-blue-950/40 text-slate-800 dark:text-slate-100';
+                let btnStyle = 'border-indigo-200/75 dark:border-blue-950/80 bg-white dark:bg-[#040816] hover:border-[#6366F1]/60 dark:hover:border-blue-500/50 hover:bg-indigo-50/50 dark:hover:bg-blue-950/40 text-slate-800 dark:text-slate-100';
 
                 if (isAnswered) {
                   if (idx === currentQ.correctIndex) {
@@ -201,7 +201,7 @@ export default function QuizView() {
               <div className="flex justify-end pt-2">
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-xs md:text-sm hover:from-blue-500 hover:to-indigo-500 transition-all shadow-cool-blue-xs"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-indigo-700 dark:from-blue-600 dark:to-indigo-600 text-white font-semibold text-xs md:text-sm hover:from-indigo-500 hover:to-indigo-600 dark:hover:from-blue-500 dark:hover:to-indigo-500 transition-all shadow-[0_6px_18px_rgba(99,102,241,0.3)] dark:shadow-cool-blue-xs"
                 >
                   <span>{currentIndex + 1 === QUIZ_QUESTIONS.length ? 'View Results' : 'Next Question'}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -211,8 +211,8 @@ export default function QuizView() {
           </div>
         ) : (
           /* Results View */
-          <div className="rounded-2xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 p-6 md:p-8 shadow-sm dark:shadow-vanta-card text-center space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-cool-blue-lg">
+          <div className="rounded-2xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 p-6 md:p-8 shadow-[0_6px_24px_rgba(99,102,241,0.08)] dark:shadow-vanta-card text-center space-y-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#6366F1] to-indigo-700 dark:from-blue-600 dark:to-indigo-600 text-white flex items-center justify-center mx-auto shadow-[0_10px_28px_rgba(99,102,241,0.35)] dark:shadow-cool-blue-lg">
               <Trophy className="w-8 h-8" />
             </div>
 
@@ -227,7 +227,7 @@ export default function QuizView() {
               </h2>
 
               <p className="mt-1 text-sm text-slate-600 dark:text-blue-200/70">
-                You scored <strong className="text-blue-600 dark:text-blue-400 font-bold">{score}</strong> out of{' '}
+                You scored <strong className="text-[#6366F1] dark:text-blue-400 font-bold">{score}</strong> out of{' '}
                 <strong>{QUIZ_QUESTIONS.length}</strong> ({Math.round((score / QUIZ_QUESTIONS.length) * 100)}%)
               </p>
             </div>
@@ -260,7 +260,7 @@ export default function QuizView() {
                     `I just completed the Cyber Safety Quiz with a score of ${score}/${QUIZ_QUESTIONS.length}. What are the most critical cyber safety rules every Indian citizen should follow?`
                   )
                 }
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-xs md:text-sm hover:from-blue-500 hover:to-indigo-500 transition-all shadow-cool-blue-xs"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-indigo-700 dark:from-blue-600 dark:to-indigo-600 text-white font-semibold text-xs md:text-sm hover:from-indigo-500 hover:to-indigo-600 dark:hover:from-blue-500 dark:hover:to-indigo-500 transition-all shadow-[0_6px_18px_rgba(99,102,241,0.3)] dark:shadow-cool-blue-xs"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Ask AI for Safety Advice</span>

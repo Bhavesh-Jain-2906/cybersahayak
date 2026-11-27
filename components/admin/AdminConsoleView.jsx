@@ -184,7 +184,7 @@ export default function AdminConsoleView() {
   });
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-white via-[#F9FAFF] to-indigo-50/60 dark:bg-none dark:bg-black text-slate-900 dark:text-slate-100">
       <ViewHeader
         title="System Administrator Console"
         subtitle="Live PostgreSQL User Directory & Security Administration"
@@ -317,9 +317,9 @@ export default function AdminConsoleView() {
           </div>
 
           {/* User Management Section */}
-          <div className="rounded-2xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/80 shadow-sm dark:shadow-vanta-card overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/80 shadow-[0_6px_22px_rgba(99,102,241,0.06)] dark:shadow-vanta-card overflow-hidden">
             {/* Table Search & Controls */}
-            <div className="p-4 md:p-5 border-b border-slate-200 dark:border-blue-950/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="p-4 md:p-5 border-b border-indigo-200/70 dark:border-blue-950/60 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-sm md:text-base text-slate-900 dark:text-white">
                   Database User Accounts
@@ -330,13 +330,13 @@ export default function AdminConsoleView() {
               </div>
 
               <div className="relative w-full sm:w-64">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-blue-400/60 pointer-events-none" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 dark:text-blue-400/60 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name or email..."
-                  className="w-full pl-8 pr-4 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-[#060a14] border border-slate-200 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full pl-8 pr-4 py-1.5 text-xs rounded-xl bg-indigo-50/50 dark:bg-[#060a14] border border-indigo-200/75 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40 dark:focus:ring-1 dark:focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -345,7 +345,7 @@ export default function AdminConsoleView() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50/70 dark:bg-[#060a17] border-b border-slate-200 dark:border-blue-950/60 text-slate-500 dark:text-blue-300/60 font-semibold uppercase tracking-wider text-[11px]">
+                  <tr className="bg-indigo-50/60 dark:bg-[#060a17] border-b border-indigo-200/70 dark:border-blue-950/60 text-slate-500 dark:text-blue-300/60 font-semibold uppercase tracking-wider text-[11px]">
                     <th className="py-3 px-4">User</th>
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4 hidden md:table-cell">User ID (UUID)</th>
@@ -358,7 +358,7 @@ export default function AdminConsoleView() {
                     <tr>
                       <td colSpan={5} className="py-12 text-center text-slate-400">
                         <div className="flex flex-col items-center justify-center gap-2">
-                          <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                          <Loader2 className="w-5 h-5 text-[#6366F1] dark:text-blue-500 animate-spin" />
                           <span>Loading database records...</span>
                         </div>
                       </td>

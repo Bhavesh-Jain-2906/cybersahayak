@@ -62,7 +62,7 @@ export default function AwarenessView() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-black">
+    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-white via-[#F9FAFF] to-indigo-50/60 dark:bg-none dark:bg-black">
       <ViewHeader
         title="Cyber Awareness & Prevention"
         subtitle="10 comprehensive guides covering UPI fraud, phishing, ransomware, identity theft & online safety"
@@ -71,9 +71,9 @@ export default function AwarenessView() {
       <div className="flex-1 overflow-y-auto text-slate-900 dark:text-slate-100 p-4 md:p-8 scrollbar-thin">
         <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-blue-950/60 pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-indigo-200/75 dark:border-blue-950/60 pb-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-semibold mb-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#6366F1]/10 dark:bg-blue-500/10 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/25 dark:border-blue-500/20 text-xs font-semibold mb-2">
               <BookOpen className="w-3.5 h-3.5" />
               <span>Cyber Awareness Academy</span>
             </div>
@@ -87,13 +87,13 @@ export default function AwarenessView() {
 
           {/* Search bar */}
           <div className="relative w-full md:w-72">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-blue-400/60" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 dark:text-blue-400/60" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search guides (e.g. UPI, AnyDesk)..."
-              className="w-full pl-9 pr-4 py-2 text-xs md:text-sm rounded-xl bg-white dark:bg-[#060a14] border border-slate-200 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-4 py-2 text-xs md:text-sm rounded-xl bg-white dark:bg-[#060a14] border border-indigo-200/80 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-[#6366F1] dark:focus:ring-blue-500"
             />
           </div>
         </div>
@@ -106,8 +106,8 @@ export default function AwarenessView() {
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                 selectedCategory === cat
-                  ? 'bg-blue-600 text-white shadow-cool-blue-xs'
-                  : 'bg-white dark:bg-[#040814] border border-slate-200 dark:border-blue-950/70 text-slate-600 dark:text-blue-200/70 hover:bg-slate-100 dark:hover:bg-blue-950/40'
+                  ? 'bg-[#6366F1] dark:bg-blue-600 text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] dark:shadow-cool-blue-xs'
+                  : 'bg-white dark:bg-[#040814] border border-indigo-200/75 dark:border-blue-950/70 text-slate-600 dark:text-blue-200/70 hover:bg-indigo-50/70 dark:hover:bg-blue-950/40 hover:text-indigo-700'
               }`}
             >
               {cat}
@@ -124,15 +124,15 @@ export default function AwarenessView() {
               <div
                 key={article.id}
                 onClick={() => handleOpenArticle(article)}
-                className="group cursor-pointer rounded-2xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 p-5 hover:border-blue-500/50 hover:shadow-md dark:hover:shadow-vanta-hover transition-all flex flex-col justify-between"
+                className="group cursor-pointer rounded-2xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 p-5 hover:border-[#6366F1]/60 dark:hover:border-blue-500/50 hover:shadow-[0_8px_24px_rgba(99,102,241,0.12)] dark:hover:shadow-vanta-hover transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20">
+                      <div className="w-8 h-8 rounded-lg bg-[#6366F1]/10 dark:bg-blue-500/10 text-[#6366F1] dark:text-blue-400 flex items-center justify-center border border-[#6366F1]/25 dark:border-blue-500/20">
                         <IconComponent className="w-4 h-4" />
                       </div>
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-blue-950/50 text-slate-700 dark:text-blue-300 border border-slate-200 dark:border-blue-900/40">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50/80 dark:bg-blue-950/50 text-indigo-800 dark:text-blue-300 border border-indigo-200/80 dark:border-blue-900/40">
                         {article.category}
                       </span>
                     </div>
@@ -141,7 +141,7 @@ export default function AwarenessView() {
                     </span>
                   </div>
 
-                  <h3 className="font-semibold text-base text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h3 className="font-semibold text-base text-slate-900 dark:text-white group-hover:text-[#6366F1] dark:group-hover:text-blue-400 transition-colors">
                     {article.title}
                   </h3>
 
@@ -150,7 +150,7 @@ export default function AwarenessView() {
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-blue-950/50 flex items-center justify-between text-xs text-blue-600 dark:text-blue-400 font-medium">
+                <div className="mt-4 pt-3 border-t border-indigo-100/80 dark:border-blue-950/50 flex items-center justify-between text-xs text-[#6366F1] dark:text-blue-400 font-medium">
                   <span>Read detailed guide</span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -258,7 +258,7 @@ export default function AwarenessView() {
                     setActiveArticle(null);
                     startChatWithPrompt(prompt);
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-xs hover:from-blue-500 hover:to-indigo-500 transition-all shadow-cool-blue-xs"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-indigo-700 dark:from-blue-600 dark:to-indigo-600 text-white font-semibold text-xs hover:from-indigo-500 hover:to-indigo-600 dark:hover:from-blue-500 dark:hover:to-indigo-500 transition-all shadow-[0_4px_14px_rgba(99,102,241,0.28)] dark:shadow-cool-blue-xs"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Ask AI Assistant About This</span>

@@ -15,12 +15,12 @@ export default function ViewHeader({ title, subtitle, icon: Icon, children }) {
   } = useChat();
 
   return (
-    <header className="h-14 border-b border-slate-200 dark:border-blue-950/70 bg-white/80 dark:bg-black/90 backdrop-blur-md px-3 md:px-6 flex items-center justify-between gap-3 shrink-0 z-10 dark:shadow-[0_4px_25px_rgba(0,0,0,0.9)]">
+    <header className="h-14 border-b border-indigo-200/75 dark:border-blue-950/70 bg-white/85 dark:bg-black/90 backdrop-blur-md px-3 md:px-6 flex items-center justify-between gap-3 shrink-0 z-10 dark:shadow-[0_4px_25px_rgba(0,0,0,0.9)]">
       <div className="flex items-center gap-2.5 min-w-0">
         {/* Mobile Hamburger Toggle */}
         <button
           onClick={() => setIsMobileSidebarOpen(true)}
-          className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-blue-300/70 dark:hover:text-blue-100 hover:bg-slate-100 dark:hover:bg-blue-950/50 lg:hidden"
+          className="p-2 rounded-lg text-slate-500 hover:text-indigo-700 dark:text-blue-300/70 dark:hover:text-blue-100 hover:bg-indigo-50/80 dark:hover:bg-blue-950/50 lg:hidden"
           aria-label="Open mobile sidebar"
         >
           <Menu className="w-5 h-5" />
@@ -30,7 +30,7 @@ export default function ViewHeader({ title, subtitle, icon: Icon, children }) {
         {!isDesktopSidebarOpen && (
           <button
             onClick={toggleDesktopSidebar}
-            className="hidden lg:flex p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-blue-300/70 dark:hover:text-blue-100 hover:bg-slate-100 dark:hover:bg-blue-950/50 transition-colors"
+            className="hidden lg:flex p-2 rounded-lg text-slate-500 hover:text-indigo-700 dark:text-blue-300/70 dark:hover:text-blue-100 hover:bg-indigo-50/80 dark:hover:bg-blue-950/50 transition-colors"
             title="Open sidebar"
             aria-label="Open desktop sidebar"
           >
@@ -41,7 +41,7 @@ export default function ViewHeader({ title, subtitle, icon: Icon, children }) {
         {/* Icon & Title */}
         <div className="flex items-center gap-2 min-w-0">
           {Icon && (
-            <div className="hidden sm:flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/20 shrink-0">
+            <div className="hidden sm:flex items-center justify-center w-7 h-7 rounded-lg bg-[#6366F1]/10 dark:bg-blue-500/10 text-[#6366F1] dark:text-blue-400 border border-[#6366F1]/25 dark:border-blue-500/20 shrink-0">
               <Icon className="w-4 h-4" />
             </div>
           )}
@@ -50,7 +50,7 @@ export default function ViewHeader({ title, subtitle, icon: Icon, children }) {
               {title}
             </h2>
             {subtitle && (
-              <p className="text-[11px] text-slate-400 dark:text-blue-300/50 hidden md:block truncate">
+              <p className="text-[11px] text-slate-500 dark:text-blue-300/50 hidden md:block truncate">
                 {subtitle}
               </p>
             )}
@@ -65,7 +65,7 @@ export default function ViewHeader({ title, subtitle, icon: Icon, children }) {
         {/* Quick Ask AI button if not currently on chat view */}
         <button
           onClick={() => setActiveView('chat')}
-          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-xs font-semibold transition-colors"
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#6366F1]/10 hover:bg-[#6366F1]/20 dark:bg-blue-600/10 dark:hover:bg-blue-600/20 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/30 dark:border-blue-500/30 text-xs font-semibold transition-colors"
           title="Open AI Assistant"
         >
           <Bot className="w-3.5 h-3.5" />

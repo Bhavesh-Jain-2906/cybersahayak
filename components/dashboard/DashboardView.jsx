@@ -44,7 +44,7 @@ export default function DashboardView() {
   const featuredArticles = AWARENESS_ARTICLES.slice(0, 4);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-black">
+    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-white via-[#F9FAFF] to-indigo-50/60 dark:bg-none dark:bg-black">
       <ViewHeader
         title="Cyber Protection Hub"
         subtitle="Threat intelligence, quick AI assistance, and security overview"
@@ -53,31 +53,31 @@ export default function DashboardView() {
       <div className="flex-1 overflow-y-auto text-slate-900 dark:text-slate-100 p-4 md:p-8 scrollbar-thin">
         <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
         {/* Welcome Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 p-6 md:p-8 text-white shadow-cool-blue-lg">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#6366F1] via-indigo-600 to-indigo-800 dark:from-blue-600 dark:via-blue-700 dark:to-indigo-800 p-6 md:p-8 text-white shadow-[0_14px_34px_rgba(99,102,241,0.3)] dark:shadow-cool-blue-lg">
           <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-xs font-semibold mb-3">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-200" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-xs font-semibold mb-3">
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-100 dark:text-blue-200" />
               <span>Connor Protection Hub</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Welcome back, {profileSettings.displayName || 'Digital Citizen'}
             </h1>
-            <p className="mt-2 text-sm md:text-base text-blue-100/90 leading-relaxed">
+            <p className="mt-2 text-sm md:text-base text-indigo-100/95 dark:text-blue-100/90 leading-relaxed">
               Your central headquarters for cybersecurity guidance, fraud prevention, official incident reporting channels, and interactive safety assessments.
             </p>
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setActiveView('chat')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-blue-700 font-semibold text-xs md:text-sm hover:bg-blue-50 transition-all shadow-md active:scale-95"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-indigo-700 dark:text-blue-700 font-semibold text-xs md:text-sm hover:bg-indigo-50 dark:hover:bg-blue-50 transition-all shadow-md active:scale-95"
               >
-                <Sparkles className="w-4 h-4 text-blue-600" />
+                <Sparkles className="w-4 h-4 text-[#6366F1] dark:text-blue-600" />
                 <span>Open AI Assistant</span>
               </button>
 
               <button
                 onClick={() => setActiveView('quiz')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/30 hover:bg-blue-500/40 border border-white/20 text-white font-semibold text-xs md:text-sm transition-all active:scale-95"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-blue-500/30 dark:hover:bg-blue-500/40 border border-white/25 text-white font-semibold text-xs md:text-sm transition-all active:scale-95"
               >
                 <HelpCircle className="w-4 h-4" />
                 <span>Take Safety Quiz</span>
@@ -101,11 +101,11 @@ export default function DashboardView() {
 
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 shadow-sm dark:shadow-vanta-card">
+          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 shadow-[0_3px_14px_rgba(99,102,241,0.06)] dark:shadow-vanta-card">
             <div className="text-xs font-medium text-slate-500 dark:text-blue-300/60">
               Active Conversations
             </div>
-            <div className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">
+            <div className="mt-1.5 text-2xl font-bold text-indigo-950 dark:text-white">
               {conversations.length}
             </div>
             <div className="mt-1 text-[11px] text-slate-400 dark:text-blue-400/50">
@@ -113,11 +113,11 @@ export default function DashboardView() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 shadow-sm dark:shadow-vanta-card">
+          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 shadow-[0_3px_14px_rgba(99,102,241,0.06)] dark:shadow-vanta-card">
             <div className="text-xs font-medium text-slate-500 dark:text-blue-300/60">
               Quiz Safety Score
             </div>
-            <div className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <div className="mt-1.5 text-2xl font-bold text-indigo-950 dark:text-white flex items-center gap-1.5">
               <span>{quizStats.completed ? `${quizStats.score}/${quizStats.total}` : 'Not Taken'}</span>
             </div>
             <div className="mt-1 text-[11px] text-slate-400 dark:text-blue-400/50">
@@ -125,11 +125,11 @@ export default function DashboardView() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 shadow-sm dark:shadow-vanta-card">
+          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 shadow-[0_3px_14px_rgba(99,102,241,0.06)] dark:shadow-vanta-card">
             <div className="text-xs font-medium text-slate-500 dark:text-blue-300/60">
               Awareness Guides
             </div>
-            <div className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">
+            <div className="mt-1.5 text-2xl font-bold text-indigo-950 dark:text-white">
               {AWARENESS_ARTICLES.length}
             </div>
             <div className="mt-1 text-[11px] text-slate-400 dark:text-blue-400/50">
@@ -137,7 +137,7 @@ export default function DashboardView() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 shadow-sm dark:shadow-vanta-card">
+          <div className="p-4 rounded-xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 shadow-[0_3px_14px_rgba(99,102,241,0.06)] dark:shadow-vanta-card">
             <div className="text-xs font-medium text-slate-500 dark:text-blue-300/60">
               Emergency Gateway
             </div>
@@ -151,9 +151,9 @@ export default function DashboardView() {
         </div>
 
         {/* Quick Question Bar */}
-        <div className="rounded-2xl bg-white dark:bg-[#03060f] border border-slate-200 dark:border-blue-900/40 p-4 md:p-5 shadow-sm dark:shadow-vanta-card">
+        <div className="rounded-2xl bg-white dark:bg-[#03060f] border border-indigo-200/75 dark:border-blue-900/40 p-4 md:p-5 shadow-[0_4px_18px_rgba(99,102,241,0.06)] dark:shadow-vanta-card">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-blue-500" />
+            <Sparkles className="w-4 h-4 text-[#6366F1] dark:text-blue-500" />
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
               Quick Ask Connor AI
             </h3>
@@ -164,12 +164,12 @@ export default function DashboardView() {
               value={quickQuestion}
               onChange={(e) => setQuickQuestion(e.target.value)}
               placeholder="e.g. Someone asked for my UPI PIN to receive money, is that safe?"
-              className="flex-1 px-4 py-2 text-sm rounded-xl bg-slate-100 dark:bg-[#060a14] border border-slate-200 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 text-sm rounded-xl bg-indigo-50/50 dark:bg-[#060a14] border border-indigo-200/75 dark:border-blue-900/40 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-[#6366F1] dark:focus:ring-blue-500"
             />
             <button
               type="submit"
               disabled={!quickQuestion.trim()}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium text-sm hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shrink-0"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#6366F1] to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 dark:from-blue-600 dark:to-indigo-600 text-white font-medium text-sm disabled:opacity-50 transition-all shrink-0 shadow-[0_4px_14px_rgba(99,102,241,0.28)] dark:shadow-none"
             >
               Ask AI
             </button>
@@ -189,7 +189,7 @@ export default function DashboardView() {
             </div>
             <button
               onClick={() => setActiveView('awareness')}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#6366F1] dark:text-blue-400 hover:underline"
             >
               <span>View all {AWARENESS_ARTICLES.length} guides</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -204,23 +204,23 @@ export default function DashboardView() {
                   recordArticleView(article.id);
                   setActiveView('awareness');
                 }}
-                className="group cursor-pointer rounded-2xl bg-white dark:bg-[#030612] border border-slate-200 dark:border-blue-950/70 p-5 hover:border-blue-500/50 hover:shadow-md dark:hover:shadow-vanta-hover transition-all"
+                className="group cursor-pointer rounded-2xl bg-white dark:bg-[#030612] border border-indigo-200/75 dark:border-blue-950/70 p-5 hover:border-[#6366F1]/60 dark:hover:border-blue-500/50 hover:shadow-[0_8px_24px_rgba(99,102,241,0.12)] dark:hover:shadow-vanta-hover transition-all"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#6366F1]/10 dark:bg-blue-500/10 text-indigo-700 dark:text-blue-400 border border-[#6366F1]/25 dark:border-blue-500/20">
                     {article.category}
                   </span>
                   <span className="text-[11px] text-slate-400 dark:text-blue-300/40">
                     {article.readTime}
                   </span>
                 </div>
-                <h3 className="font-semibold text-sm md:text-base text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="font-semibold text-sm md:text-base text-slate-900 dark:text-white group-hover:text-[#6366F1] dark:group-hover:text-blue-400 transition-colors">
                   {article.title}
                 </h3>
                 <p className="mt-1 text-xs text-slate-500 dark:text-blue-200/60 line-clamp-2 leading-relaxed">
                   {article.summary}
                 </p>
-                <div className="mt-3 flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
+                <div className="mt-3 flex items-center gap-1 text-xs font-medium text-[#6366F1] dark:text-blue-400 group-hover:translate-x-1 transition-transform">
                   <span>Read guide</span>
                   <ArrowRight className="w-3 h-3" />
                 </div>

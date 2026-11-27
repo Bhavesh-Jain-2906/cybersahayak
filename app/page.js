@@ -50,7 +50,7 @@ export default function HomePage() {
 
   // Authenticated application
   return (
-    <div className="relative flex h-screen w-screen overflow-hidden bg-white dark:bg-[#050507] text-slate-900 dark:text-slate-100 selection:bg-blue-600/20 dark:selection:bg-purple-600/30 selection:text-slate-900 dark:selection:text-purple-100">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-white dark:bg-[#050507] text-slate-900 dark:text-slate-100 selection:bg-[#6366F1]/20 dark:selection:bg-purple-600/30 selection:text-indigo-950 dark:selection:text-purple-100">
       {/* Full-viewport Purple Noir black-hole video spans behind both Sidebar & Chat on the main AI view */}
       {activeView === 'chat' && <BlackHoleBackground />}
 

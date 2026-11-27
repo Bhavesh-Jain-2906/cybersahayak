@@ -180,7 +180,7 @@ function FormattedBlock({ text }) {
           return (
             <blockquote
               key={pIdx}
-              className="border-l-4 border-blue-500 dark:border-purple-400 bg-blue-50/50 dark:bg-purple-500/10 px-3.5 py-2 text-xs md:text-sm italic text-slate-700 dark:text-purple-100 rounded-r-lg"
+              className="border-l-4 border-[#6366F1] dark:border-purple-400 bg-indigo-50/60 dark:bg-purple-500/10 px-3.5 py-2 text-xs md:text-sm italic text-slate-700 dark:text-purple-100 rounded-r-lg"
             >
               {renderInline(quoteLines)}
             </blockquote>
@@ -267,7 +267,7 @@ function renderInline(text) {
         return <em key={idx} className="italic text-slate-700 dark:text-purple-200">{token.val}</em>;
       case 'code':
         return (
-          <code key={idx} className="rounded bg-slate-100 dark:bg-purple-500/15 px-1.5 py-0.5 font-mono text-xs text-blue-600 dark:text-purple-200 border border-slate-200 dark:border-purple-400/25">
+          <code key={idx} className="rounded bg-indigo-50/80 dark:bg-purple-500/15 px-1.5 py-0.5 font-mono text-xs text-indigo-700 dark:text-purple-200 border border-indigo-200/80 dark:border-purple-400/25">
             {token.val}
           </code>
         );
@@ -283,7 +283,7 @@ function renderInline(text) {
             href={safeHref}
             target={safeHref.startsWith('http') ? '_blank' : undefined}
             rel={safeHref.startsWith('http') ? 'noopener noreferrer' : undefined}
-            className="text-blue-600 dark:text-purple-300 underline underline-offset-2 hover:text-blue-700 dark:hover:text-purple-200 font-medium transition-colors"
+            className="text-[#6366F1] dark:text-purple-300 underline underline-offset-2 hover:text-indigo-800 dark:hover:text-purple-200 font-medium transition-colors"
           >
             {token.text}
           </a>

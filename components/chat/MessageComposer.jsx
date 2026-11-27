@@ -47,7 +47,7 @@ export default function MessageComposer() {
       {/* Input box with frosted glass translucency in light & dark mode */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex flex-col rounded-2xl bg-white/80 dark:bg-[#0B0914]/75 backdrop-blur-md border border-slate-200/80 dark:border-white/10 shadow-lg dark:shadow-[0_12px_36px_rgba(0,0,0,0.65)] focus-within:border-blue-500/60 focus-within:dark:border-purple-400/50 focus-within:ring-2 focus-within:ring-blue-500/25 focus-within:dark:ring-purple-500/20 transition-all duration-200"
+        className="relative flex flex-col rounded-2xl bg-white/80 dark:bg-[#0B0914]/75 backdrop-blur-md border border-indigo-200/80 dark:border-white/10 shadow-[0_10px_32px_rgba(99,102,241,0.1)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.65)] focus-within:border-[#6366F1]/75 focus-within:dark:border-purple-400/50 focus-within:ring-2 focus-within:ring-[#6366F1]/25 focus-within:dark:ring-purple-500/20 transition-all duration-200"
       >
         <div className="flex items-end gap-2 p-3">
           <textarea
@@ -67,8 +67,8 @@ export default function MessageComposer() {
             disabled={!input.trim() || isLoading}
             className={`flex items-center justify-center w-9 h-9 rounded-xl transition-all shrink-0 ${
               input.trim() && !isLoading
-                ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 dark:bg-none dark:bg-[#F4F4F5] dark:hover:bg-white text-white dark:text-[#09090B] shadow-cool-blue dark:shadow-none active:scale-95'
-                : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-zinc-600 cursor-not-allowed border dark:border-white/10'
+                ? 'bg-gradient-to-r from-[#6366F1] via-indigo-500 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 dark:bg-none dark:bg-[#F4F4F5] dark:hover:bg-white text-white dark:text-[#09090B] shadow-[0_6px_18px_rgba(99,102,241,0.34)] dark:shadow-none active:scale-95'
+                : 'bg-indigo-50/80 dark:bg-white/5 text-slate-400 dark:text-zinc-600 cursor-not-allowed border border-indigo-200/50 dark:border-white/10'
             }`}
             title="Send message (Enter)"
             aria-label="Send message"
@@ -78,9 +78,9 @@ export default function MessageComposer() {
         </div>
 
         {/* Keyboard hints & safe notice */}
-        <div className="flex items-center justify-between px-3.5 py-1.5 border-t border-slate-200/70 dark:border-white/10 text-[11px] text-slate-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between px-3.5 py-1.5 border-t border-indigo-100/90 dark:border-white/10 text-[11px] text-slate-500 dark:text-zinc-400">
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-500 dark:text-purple-400 shrink-0" />
+            <ShieldCheck className="w-3.5 h-3.5 text-[#6366F1] dark:text-purple-400 shrink-0" />
             <span className="hidden sm:inline">Zero-Credential Policy: Never disclose PINs, OTPs or Passwords</span>
             <span className="sm:hidden">Never share OTPs or PINs</span>
           </div>
@@ -102,7 +102,7 @@ export default function MessageComposer() {
           href="https://cybercrime.gov.in"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 dark:text-purple-300 underline underline-offset-2 hover:text-blue-300 dark:hover:text-purple-200"
+          className="text-[#6366F1] dark:text-purple-300 font-medium underline underline-offset-2 hover:text-indigo-800 dark:hover:text-purple-200"
         >
           cybercrime.gov.in
         </a>
